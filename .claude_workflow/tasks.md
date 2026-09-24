@@ -10,8 +10,9 @@
 - 詰まったら止めて design.md を見直す
 
 ## M0: 土台（先に技術リスクを潰す）
-- [ ] **T1 雛形**: Vite + CRXJS + TypeScript strict + Vitest(jsdom) + Tailwind v4 をセットアップする。manifest.ts・空の background・空の options を作る
+- [x] **T1 雛形**: Vite + CRXJS + TypeScript strict + Vitest(jsdom) + Tailwind v4 をセットアップする。manifest.ts・空の background・空の options を作る
   - 完了条件: `npm run build` が成功する／`npm test` が0件で通る／`dist/` を Chrome に読み込んでエラーが出ない
+  - 証跡: build 成功（vite 8.3.0 / CRXJS 2.7.1 / TS 7.0.2）・`npm test` exit 0。Chrome 読み込みは T2 と合わせて確認
 - [ ] **T2 動的注入の検証**: アイコンクリック → `?script` で content script を注入 → `console.log` とバッジ表示
   - 完了条件: 実際の Chrome で任意のページに注入できる。chrome:// ページではバッジ「×」になる（設計リスク①の解消）
 - [ ] **T3 型定義**: `core/types.ts`（ProfileKey / FieldKey / FieldDescriptor / Assignment / FillInstruction）
