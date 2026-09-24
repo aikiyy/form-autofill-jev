@@ -29,7 +29,8 @@
   - 証跡: scan.test.ts 13件 pass・typecheck OK。jsdom に CSS.escape がないため、label は `el.labels`、radio は name 比較で解決（実ブラウザでも同じ挙動）
 
 ## M2: Jev の精度を早めに確認
-- [ ] **T6 Jev リクエストの構築と解析**: `core/jev.ts`（buildJevRequest / parseJevResponse）。SDK の型を使い、ユニットテストはレスポンスのモックで行う
+- [x] **T6 Jev リクエストの構築と解析**: `core/jev.ts`（buildJevRequest / parseJevResponse）。SDK の型を使い、ユニットテストはレスポンスのモックで行う
+  - 証跡: jev.test.ts 7件 pass・typecheck OK。選択肢の説明は英語主＋日本語表記例。API エラーは throw してフォールバックは T15 で扱う
 - [ ] **T7 spike**: `scripts/jev-spike.ts` で、フィクスチャの descriptor を実際の Jev に送る（`.env` の `TYPESAFE_API_KEY` を使用）
   - 完了条件: 欄ごとの choice と confidence の表を出力し、正解率と confidence の分布を tasks.md に記録する。結果をもとに閾値（初期値 0.85）と、ルールで拾うべき項目を決める
   - ※ユーザーに APIキーの用意を依頼する
