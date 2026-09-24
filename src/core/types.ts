@@ -1,0 +1,108 @@
+/** 性別。未設定は空文字。 */
+export type Gender = "male" | "female" | "other" | "";
+
+/**
+ * 保存するプロフィール（1件のみ）。
+ * 値はすべて正規化した形で保存し、フォームに合わせた整形は入力時に行う。
+ */
+export interface Profile {
+  lastName: string;
+  firstName: string;
+  /** カタカナで保存する */
+  lastNameKana: string;
+  /** カタカナで保存する */
+  firstNameKana: string;
+  email: string;
+  /** ハイフンなしの数字のみ（例: 09012345678） */
+  tel: string;
+  /** ハイフンなしの7桁（例: 1500001） */
+  postalCode: string;
+  /** 都道府県名（例: 東京都） */
+  prefecture: string;
+  /** 市区町村（例: 渋谷区） */
+  city: string;
+  /** 町域・番地（例: 神宮前1-2-3） */
+  street: string;
+  /** 建物名・部屋番号 */
+  building: string;
+  /** YYYY-MM-DD */
+  birthDate: string;
+  gender: Gender;
+}
+
+export type ProfileKey = keyof Profile;
+
+/**
+ * フォームの欄に割り当てる項目の種類（Jev の Choice の選択肢でもある）。
+ * 分割欄（電話番号の3欄など）は同じキーを複数の欄に割り当て、何番目かはコードで決める。
+ */
+export const FIELD_KEYS = [
+  "lastName",
+  "firstName",
+  "fullName",
+  "lastNameKana",
+  "firstNameKana",
+  "fullNameKana",
+  "email",
+  "tel",
+  "postalCode",
+  "prefecture",
+  "city",
+  "street",
+  "building",
+  "address",
+  "birthDate",
+  "gender",
+  "none",
+] as const;
+
+export type FieldKey = (typeof FIELD_KEYS)[number];
+
+/** select の option や radio の選択肢 */
+export interface FieldOption {
+  value: string;
+  text: string;
+}
+
+/**
+ * フォームの1欄を表すメタ情報。Jev に送るのはこの情報だけで、プロフィールの値は含めない。
+ * radio は name ごとにまとめて1件にする。
+ */
+export interface FieldDescriptor {
+  /** 拡張が付与する ID（要素の data-afj-id と対応） */
+  id: string;
+  tag: "input" | "select" | "textarea";
+  /** input の type（select / textarea は tag と同じ値） */
+  type: string;
+  name: string;
+  htmlId: string;
+  autocomplete: string;
+  /** label・th・dt などから解決したラベル文字列 */
+  label: string;
+  placeholder: string;
+  ariaLabel: string;
+  /** 欄の直後にある短いテキスト（「例: 03-1234-5678」「（全角カナ）」など） */
+  nearbyText: string;
+  options?: FieldOption[];
+  maxLength?: number;
+  /** ページ内の出現順（0始まり）。分割欄の順序決定に使う */
+  index: number;
+}
+
+/** 欄に項目を割り当てた判定結果 */
+export interface Assignment {
+  fieldId: string;
+  key: FieldKey;
+  /** 0〜1。ルール判定は 1 */
+  confidence: number;
+  source: "rule" | "jev";
+}
+
+/**
+ * content script への入力指示。
+ * - fill: value を入力して緑でハイライトする
+ * - review: 入力せず黄でハイライトする（確信度不足・選択肢が一致しない等）
+ */
+export type FillInstruction =
+  | { fieldId: string; status: "fill"; value: string }
+  | { fieldId: string; status: "review"; reason: string };

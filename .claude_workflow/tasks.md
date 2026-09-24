@@ -16,8 +16,9 @@
 - [x] **T2 動的注入の検証**: アイコンクリック → `?script` で content script を注入 → `console.log` とバッジ表示
   - 完了条件: 実際の Chrome で任意のページに注入できる。chrome:// ページではバッジ「×」になる（設計リスク①の解消）
   - 証跡: ユーザーが実機で注入ログ・× バッジを確認。途中でエントリ名重複による SW 誤ロードを修正（53d027a）。`?script&iife` を採用（CRXJS が web_accessible_resources を付与する点は既知事項として許容）
-- [ ] **T3 型定義**: `core/types.ts`（ProfileKey / FieldKey / FieldDescriptor / Assignment / FillInstruction）
+- [x] **T3 型定義**: `core/types.ts`（ProfileKey / FieldKey / FieldDescriptor / Assignment / FillInstruction）
   - 完了条件: `tsc --noEmit` が通る
+  - 証跡: `npm run typecheck` exit 0。FillInstruction は fill/review の判別共用体にし、radio/select の選択肢は FieldOption{value,text} で持つ
 
 ## M1: フォームの読み取り（DOM → descriptor）
 - [ ] **T4 フィクスチャ作成**: `test/fixtures/forms/` に5種類の HTML を用意する
