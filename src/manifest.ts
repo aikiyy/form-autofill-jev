@@ -8,7 +8,7 @@ export default defineManifest({
   description: pkg.description,
   permissions: ["activeTab", "scripting", "storage"],
   host_permissions: ["https://api.typesafe.ai/*"],
-  background: { service_worker: "src/background/index.ts", type: "module" },
+  background: { service_worker: "src/background/service-worker.ts", type: "module" },
   action: { default_title: "このページのフォームに自動入力" },
   options_page: "src/options/index.html",
 });

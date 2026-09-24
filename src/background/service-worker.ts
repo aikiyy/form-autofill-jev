@@ -1,4 +1,4 @@
-import contentScript from "../content/index.ts?script&iife";
+import contentScript from "../content/content-script.ts?script&iife";
 import { injectContentScript } from "./inject.ts";
 
 chrome.action.onClicked.addListener((tab) => {

@@ -23,3 +23,4 @@
 - **プロフィールは `chrome.storage.local` に保存**（`storage.sync` は使わない）。保存処理はリポジトリ層に閉じ込め、後から暗号化を差し込めるようにする
 - **Jev APIキーはハードコード禁止**: オプション画面でユーザーが入力し `chrome.storage.local` に保存。API呼び出しは service worker から行う
 - Jevは日本語精度が英語より劣り、カウントも苦手 → 確定的に判定できる項目はルールで処理し、分割フィールドの順序などはコード側で扱う
+- **エントリファイル名を重複させない**: CRXJS はチャンクをファイル名で解決するため、`background/index.ts` と `content/index.ts` のように basename が同じだと service worker のローダーが別エントリを読み込む（アイコンを押しても何も起きない症状になる）。エントリは `service-worker.ts` / `content-script.ts` のように一意な名前にする
