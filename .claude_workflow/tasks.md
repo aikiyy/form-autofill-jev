@@ -21,10 +21,12 @@
   - 証跡: `npm run typecheck` exit 0。FillInstruction は fill/review の判別共用体にし、radio/select の選択肢は FieldOption{value,text} で持つ
 
 ## M1: フォームの読み取り（DOM → descriptor）
-- [ ] **T4 フィクスチャ作成**: `test/fixtures/forms/` に5種類の HTML を用意する
+- [x] **T4 フィクスチャ作成**: `test/fixtures/forms/` に5種類の HTML を用意する
   - label[for] 型／テーブル（th）型／分割電話・分割郵便番号型／生年月日 select＋性別 radio 型／autocomplete 付きの英語フォーム
-- [ ] **T5 scan**: `dom/scan.ts`（label の解決順、radio のまとめ、対象外要素の除外、data-afj-id の付与）
+  - 証跡: test/fixtures/forms/ に5ファイル作成（除外対象の password・hidden・非表示・disabled・checkbox も含む）
+- [x] **T5 scan**: `dom/scan.ts`（label の解決順、radio のまとめ、対象外要素の除外、data-afj-id の付与）
   - 完了条件: 5種類のフィクスチャで期待どおりの descriptor になることをユニットテストで確認
+  - 証跡: scan.test.ts 13件 pass・typecheck OK。jsdom に CSS.escape がないため、label は `el.labels`、radio は name 比較で解決（実ブラウザでも同じ挙動）
 
 ## M2: Jev の精度を早めに確認
 - [ ] **T6 Jev リクエストの構築と解析**: `core/jev.ts`（buildJevRequest / parseJevResponse）。SDK の型を使い、ユニットテストはレスポンスのモックで行う

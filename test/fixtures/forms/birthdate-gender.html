@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>予約（生年月日・性別型）</title></head>
+<body>
+<form>
+  <fieldset>
+    <legend>生年月日</legend>
+    <select name="birth_y"><option value="">----</option><option>1987</option><option>1988</option><option>1989</option></select>年
+    <select name="birth_m"><option value="">--</option><option value="01">1</option><option value="03">3</option><option value="12">12</option></select>月
+    <select name="birth_d"><option value="">--</option><option>1</option><option>17</option><option>31</option></select>日
+  </fieldset>
+  <fieldset>
+    <legend>性別</legend>
+    <label><input type="radio" name="sex" value="1">男性</label>
+    <label><input type="radio" name="sex" value="2">女性</label>
+    <label><input type="radio" name="sex" value="9">回答しない</label>
+  </fieldset>
+  <label><input type="checkbox" name="agree">利用規約に同意する</label>
+</form>
+</body>
+</html>
