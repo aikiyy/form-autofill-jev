@@ -41,7 +41,8 @@
   - 決定: 閾値は **0.85** のまま（0.85〜0.9 で自動入力 34/35・誤入力 0）。autocomplete 付きの欄は Jev より確実なので T8 のルールで先に確定させる（address-line2 対策）
 
 ## M3: 判定と整形（core）
-- [ ] **T8 ルール判定**: `core/rules.ts`（autocomplete の対応表、日本語・英語の正規表現、あいまいな欄は null を返す）
+- [x] **T8 ルール判定**: `core/rules.ts`（autocomplete の対応表、日本語・英語の正規表現、あいまいな欄は null を返す）
+  - 証跡: rules.test.ts 77件 pass（全体 101件）・typecheck OK。フィクスチャ全欄で「null か正解のどちらか」を検証するテストを追加（正解表は test/fixtures/expected.ts に共通化）。「建物名」の「名」を名と誤認して null になる問題を、単独の「名」だけ拾う正規表現で修正
 - [ ] **T9 format**: `core/format.ts`（カナ⇔ひらがな、全角/半角、電話・郵便番号のハイフン、select/radio の選択肢照合）
 - [ ] **T10 resolve**: `core/resolve.ts`（ルール結果と Jev 結果の統合、閾値による振り分け、連続する同じ key の分割、空のプロフィール項目はスキップ）
   - 完了条件: 分割電話・分割郵便番号・生年月日の select 3つ・ひらがな欄・選択肢が一致しないときの黄色扱いを、すべてユニットテストで確認

@@ -1,15 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
+import { loadFixture } from "../../test/load-fixture.ts";
 import type { FieldDescriptor } from "../core/types.ts";
 import { scanFields } from "./scan.ts";
-
-function loadFixture(name: string): void {
-  const html = readFileSync(resolve(import.meta.dirname, "../../test/fixtures/forms", name), "utf8");
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  document.title = doc.title;
-  document.body.innerHTML = doc.body.innerHTML;
-}
 
 function byName(fields: FieldDescriptor[], name: string): FieldDescriptor {
   const field = fields.find((f) => f.name === name);
