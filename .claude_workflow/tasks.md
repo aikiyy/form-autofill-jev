@@ -45,8 +45,9 @@
   - 証跡: rules.test.ts 77件 pass（全体 101件）・typecheck OK。フィクスチャ全欄で「null か正解のどちらか」を検証するテストを追加（正解表は test/fixtures/expected.ts に共通化）。「建物名」の「名」を名と誤認して null になる問題を、単独の「名」だけ拾う正規表現で修正
 - [x] **T9 format**: `core/format.ts`（カナ⇔ひらがな、全角/半角、電話・郵便番号のハイフン、select/radio の選択肢照合）
   - 証跡: format.test.ts 27件 pass・typecheck OK。設計変更: 電話番号は市外局番の桁数が地域で違い推測すると誤入力になるため、プロフィールに**ハイフン区切りで保存**し、その区切り位置で分割する（区切りなしの固定電話は分割せず要確認）。半角カナ指定は非対応で null（要確認）
-- [ ] **T10 resolve**: `core/resolve.ts`（ルール結果と Jev 結果の統合、閾値による振り分け、連続する同じ key の分割、空のプロフィール項目はスキップ）
+- [x] **T10 resolve**: `core/resolve.ts`（ルール結果と Jev 結果の統合、閾値による振り分け、連続する同じ key の分割、空のプロフィール項目はスキップ）
   - 完了条件: 分割電話・分割郵便番号・生年月日の select 3つ・ひらがな欄・選択肢が一致しないときの黄色扱いを、すべてユニットテストで確認
+  - 証跡: resolve.test.ts 29件 pass（全体 157件）・typecheck OK。フィクスチャ3種で scan → ルール → resolve の結合テストも追加し、分割欄・select・radio に正しい値が入ることを確認。分割しない項目が隣り合って重複した場合・分割欄の一部だけ低確信の場合は、グループ全体を要確認にする
 
 ## M4: 保存とオプション画面
 - [ ] **T11 repository**: `storage/repository.ts`（getProfile / saveProfile / getApiKey / saveApiKey。chrome.storage はモック）
