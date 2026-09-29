@@ -52,8 +52,9 @@
 ## M4: 保存とオプション画面
 - [x] **T11 repository**: `storage/repository.ts`（getProfile / saveProfile / getApiKey / saveApiKey。chrome.storage はモック）
   - 証跡: repository.test.ts 7件 pass・typecheck OK（※テストと実装を同時に作成したため Red の確認は省略）。欠けた項目・不正な型は空で補う。読み書きは readItem / writeItem に集約（暗号化の差し込み口）
-- [ ] **T12 オプション画面**: プロフィール（要件の全項目）と APIキーの編集・保存（Tailwind）
+- [x] **T12 オプション画面**: プロフィール（要件の全項目）と APIキーの編集・保存（Tailwind）
   - 完了条件: Chrome 上で保存・再読み込みしても値が残る
+  - 証跡: form.test.ts 11件 pass（正規化・検証）。ユーザーが実機で保存・再読み込み後の保持・固定電話ハイフンなしのエラー表示を確認（c03acb4）
 
 ## M5: 結合
 - [ ] **T13 fill**: `dom/fill.ts`（native setter とイベント発火、select、radio、ハイライト）
