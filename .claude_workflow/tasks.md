@@ -50,7 +50,8 @@
   - 証跡: resolve.test.ts 29件 pass（全体 157件）・typecheck OK。フィクスチャ3種で scan → ルール → resolve の結合テストも追加し、分割欄・select・radio に正しい値が入ることを確認。分割しない項目が隣り合って重複した場合・分割欄の一部だけ低確信の場合は、グループ全体を要確認にする
 
 ## M4: 保存とオプション画面
-- [ ] **T11 repository**: `storage/repository.ts`（getProfile / saveProfile / getApiKey / saveApiKey。chrome.storage はモック）
+- [x] **T11 repository**: `storage/repository.ts`（getProfile / saveProfile / getApiKey / saveApiKey。chrome.storage はモック）
+  - 証跡: repository.test.ts 7件 pass・typecheck OK（※テストと実装を同時に作成したため Red の確認は省略）。欠けた項目・不正な型は空で補う。読み書きは readItem / writeItem に集約（暗号化の差し込み口）
 - [ ] **T12 オプション画面**: プロフィール（要件の全項目）と APIキーの編集・保存（Tailwind）
   - 完了条件: Chrome 上で保存・再読み込みしても値が残る
 
