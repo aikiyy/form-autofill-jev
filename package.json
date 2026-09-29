@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "spike": "node --env-file=.env scripts/jev-spike.ts"
+    "spike": "node --env-file=.env scripts/jev-spike.ts",
+    "fixtures": "python3 -m http.server 8765 --directory test/fixtures/forms"
   },
   "type": "module",
   "private": true,
