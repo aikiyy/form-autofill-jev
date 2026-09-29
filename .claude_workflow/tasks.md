@@ -57,8 +57,9 @@
   - 証跡: form.test.ts 11件 pass（正規化・検証）。ユーザーが実機で保存・再読み込み後の保持・固定電話ハイフンなしのエラー表示を確認（c03acb4）
 
 ## M5: 結合
-- [ ] **T13 fill**: `dom/fill.ts`（native setter とイベント発火、select、radio、ハイライト）
+- [x] **T13 fill**: `dom/fill.ts`（native setter とイベント発火、select、radio、ハイライト）
   - 完了条件: React 風に setter を監視しているフィクスチャで、値が反映されることをテストで確認
+  - 証跡: fill.test.ts 8件 pass・typecheck OK。要素インスタンス側の value setter（React の値の記録）が呼ばれないことをテストで確認。select に該当 value がない・入力後に値が一致しない欄は要確認として数える
 - [ ] **T14 toast**: `dom/toast.ts`（Shadow DOM で「N欄入力・M欄要確認」と、フォールバックの理由を表示）
 - [ ] **T15 結合**: background の classify 処理（rules → jev → resolve、APIキーなしや Jev エラー時のフォールバック）と、content の scan → message → fill → toast
   - 完了条件: フィクスチャを Chrome で開いて1クリックで入力される。APIキーを外してもルール判定分は入力される
