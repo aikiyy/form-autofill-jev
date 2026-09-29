@@ -60,7 +60,8 @@
 - [x] **T13 fill**: `dom/fill.ts`（native setter とイベント発火、select、radio、ハイライト）
   - 完了条件: React 風に setter を監視しているフィクスチャで、値が反映されることをテストで確認
   - 証跡: fill.test.ts 8件 pass・typecheck OK。要素インスタンス側の value setter（React の値の記録）が呼ばれないことをテストで確認。select に該当 value がない・入力後に値が一致しない欄は要確認として数える
-- [ ] **T14 toast**: `dom/toast.ts`（Shadow DOM で「N欄入力・M欄要確認」と、フォールバックの理由を表示）
+- [x] **T14 toast**: `dom/toast.ts`（Shadow DOM で「N欄入力・M欄要確認」と、フォールバックの理由を表示）
+  - 証跡: toast.test.ts 6件 pass・typecheck OK。Shadow DOM 内で表示し、連続表示は置き換え・6秒で自動で消える
 - [ ] **T15 結合**: background の classify 処理（rules → jev → resolve、APIキーなしや Jev エラー時のフォールバック）と、content の scan → message → fill → toast
   - 完了条件: フィクスチャを Chrome で開いて1クリックで入力される。APIキーを外してもルール判定分は入力される
 
