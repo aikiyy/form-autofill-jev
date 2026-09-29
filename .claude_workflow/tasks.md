@@ -62,8 +62,9 @@
   - 証跡: fill.test.ts 8件 pass・typecheck OK。要素インスタンス側の value setter（React の値の記録）が呼ばれないことをテストで確認。select に該当 value がない・入力後に値が一致しない欄は要確認として数える
 - [x] **T14 toast**: `dom/toast.ts`（Shadow DOM で「N欄入力・M欄要確認」と、フォールバックの理由を表示）
   - 証跡: toast.test.ts 6件 pass・typecheck OK。Shadow DOM 内で表示し、連続表示は置き換え・6秒で自動で消える
-- [ ] **T15 結合**: background の classify 処理（rules → jev → resolve、APIキーなしや Jev エラー時のフォールバック）と、content の scan → message → fill → toast
+- [x] **T15 結合**: background の classify 処理（rules → jev → resolve、APIキーなしや Jev エラー時のフォールバック）と、content の scan → message → fill → toast
   - 完了条件: フィクスチャを Chrome で開いて1クリックで入力される。APIキーを外してもルール判定分は入力される
+  - 証跡: classify.test.ts 13件 pass（全体 200件）・build OK。ユーザーが実機でフィクスチャ5種すべて正しく入力されること、APIキーなしでルール判定分のみ入力＋理由表示されることを確認（08e9d43）
 
 ## M6: 実際のフォームで検証
 - [ ] **T16 実フォーム検証**: よく使う日本語フォーム5種以上で試し、欄ごとの正誤を記録する。閾値やルールを調整する
