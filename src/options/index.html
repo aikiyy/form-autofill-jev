@@ -6,8 +6,74 @@
     <script type="module" src="./main.ts"></script>
   </head>
   <body class="bg-slate-50 text-slate-900">
-    <main id="app" class="mx-auto max-w-2xl p-6">
-      <h1 class="text-xl font-bold">Form Autofill 設定</h1>
+    <main class="mx-auto max-w-2xl px-4 py-8">
+      <h1 class="text-2xl font-bold">Form Autofill 設定</h1>
+      <p class="mt-2 text-sm text-slate-600">
+        ここに入れた情報は、このブラウザ内（chrome.storage.local）だけに保存されます。Jev に送るのはフォームの項目名などだけで、ここの値は送りません。
+      </p>
+
+      <form id="settings" class="mt-6 space-y-8" novalidate>
+        <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
+          <h2 class="font-semibold">氏名</h2>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label class="block text-sm">姓<input name="lastName" class="field" placeholder="山田" /></label>
+            <label class="block text-sm">名<input name="firstName" class="field" placeholder="太郎" /></label>
+            <label class="block text-sm">セイ（カタカナ）<input name="lastNameKana" class="field" placeholder="ヤマダ" /></label>
+            <label class="block text-sm">メイ（カタカナ）<input name="firstNameKana" class="field" placeholder="タロウ" /></label>
+          </div>
+        </section>
+
+        <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
+          <h2 class="font-semibold">連絡先</h2>
+          <label class="block text-sm">メールアドレス<input name="email" type="email" class="field" placeholder="yamada@example.com" /></label>
+          <label class="block text-sm"
+            >電話番号（ハイフン区切り）<input name="tel" type="tel" class="field" placeholder="090-1234-5678" />
+            <span class="mt-1 block text-xs text-slate-500">分割された入力欄には、ここのハイフン位置で分けて入力します</span>
+          </label>
+        </section>
+
+        <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
+          <h2 class="font-semibold">住所</h2>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label class="block text-sm">郵便番号<input name="postalCode" class="field" placeholder="150-0001" /></label>
+            <label class="block text-sm">都道府県<input name="prefecture" class="field" placeholder="東京都" /></label>
+          </div>
+          <label class="block text-sm">市区町村<input name="city" class="field" placeholder="渋谷区" /></label>
+          <label class="block text-sm">町名・番地<input name="street" class="field" placeholder="神宮前1-2-3" /></label>
+          <label class="block text-sm">建物名・部屋番号<input name="building" class="field" placeholder="ハイツ101" /></label>
+        </section>
+
+        <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
+          <h2 class="font-semibold">生年月日・性別</h2>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label class="block text-sm">生年月日<input name="birthDate" type="date" class="field" /></label>
+            <label class="block text-sm"
+              >性別
+              <select name="gender" class="field">
+                <option value="">未設定</option>
+                <option value="male">男性</option>
+                <option value="female">女性</option>
+                <option value="other">その他</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
+          <h2 class="font-semibold">Jev（TypeSafe）APIキー</h2>
+          <label class="block text-sm"
+            >APIキー<input name="apiKey" type="password" class="field" autocomplete="off" />
+            <span class="mt-1 block text-xs text-slate-500">未設定でも、項目名から確実に判断できる欄だけは入力します</span>
+          </label>
+        </section>
+
+        <div class="flex items-center gap-4">
+          <button type="submit" class="rounded-md bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700">
+            保存
+          </button>
+          <p id="status" role="status" class="text-sm"></p>
+        </div>
+      </form>
     </main>
   </body>
 </html>
