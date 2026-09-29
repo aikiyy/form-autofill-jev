@@ -54,19 +54,24 @@ export function buildJevRequest(
   targetIds: readonly string[],
   pageTitle: string,
 ): SystemOneRequest<Questions> {
+  const compacted = new Map(fields.map((f) => [f.id, compactField(f)]));
   const questions: Questions = {};
   for (const id of targetIds) {
+    const field = compacted.get(id);
+    if (!field) continue;
+    // 対象欄のメタ情報を質問に埋め込み、ID の照合だけに頼らない（name と ID の取り違え対策）
     questions[id] = choice(
       {
-        question: `Which personal profile item should be entered into the form field with id "${id}"?`,
-        hint: "Use the field's label, name, placeholder, autocomplete, nearby text and the surrounding fields in state.fields. Choose none if it is not personal profile information.",
+        question: "Which personal profile item should be entered into this form field?",
+        field,
+        hint: "Judge mainly from this field's label, name, placeholder, autocomplete and nearby text. Use state.fields only as surrounding context. Choose none if it is not personal profile information.",
       },
       CRITERIA,
     );
   }
   return {
     model: JEV_MODEL,
-    state: { pageTitle, fields: fields.map(compactField) },
+    state: { pageTitle, fields: [...compacted.values()] },
     questions,
   };
 }

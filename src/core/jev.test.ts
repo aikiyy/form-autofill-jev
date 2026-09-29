@@ -51,6 +51,16 @@ describe("buildJevRequest", () => {
     expect(req.model).toBe("jev-latest");
   });
 
+  it("各質問に対象欄自身のメタ情報を埋め込み、ID の照合だけに頼らない", () => {
+    // ページ側の name が拡張の ID と紛らわしくても、質問だけで対象欄が特定できるようにする
+    const req = buildJevRequest(fields, ["f1"], "会員登録");
+    const q = req.questions["f1"] as ChoiceQuestion;
+
+    expect(q.instructions).toMatchObject({
+      field: { id: "f1", name: "q1", label: "ご連絡先", placeholder: "090-1234-5678" },
+    });
+  });
+
   it("state には周りの欄も判断材料として全欄を入れ、空の項目は省く", () => {
     const req = buildJevRequest(fields, ["f1"], "会員登録");
     const state = req.state as { pageTitle: string; fields: Record<string, unknown>[] };

@@ -31,9 +31,14 @@
 ## M2: Jev の精度を早めに確認
 - [x] **T6 Jev リクエストの構築と解析**: `core/jev.ts`（buildJevRequest / parseJevResponse）。SDK の型を使い、ユニットテストはレスポンスのモックで行う
   - 証跡: jev.test.ts 7件 pass・typecheck OK。選択肢の説明は英語主＋日本語表記例。API エラーは throw してフォールバックは T15 で扱う
-- [ ] **T7 spike**: `scripts/jev-spike.ts` で、フィクスチャの descriptor を実際の Jev に送る（`.env` の `TYPESAFE_API_KEY` を使用）
+- [x] **T7 spike**: `scripts/jev-spike.ts` で、フィクスチャの descriptor を実際の Jev に送る（`.env` の `TYPESAFE_API_KEY` を使用）
   - 完了条件: 欄ごとの choice と confidence の表を出力し、正解率と confidence の分布を tasks.md に記録する。結果をもとに閾値（初期値 0.85）と、ルールで拾うべき項目を決める
   - ※ユーザーに APIキーの用意を依頼する
+  - 証跡（2026-09-29, jev-1.13.0, 5フィクスチャ36欄）:
+    - 初回 31/36（86.1%）。誤りはテーブル型の4欄がすべて1行ずれ → 拡張の ID（f0…）がページの name（f1…）と衝突し、Jev が name で照合していたのが原因。ID を `afj-N` に変更し、質問に対象欄のメタ情報を埋め込んで修正
+    - 修正後 **36/36（100%）**。閾値 0.5〜0.95 のどれでも誤入力 0。平均レイテンシ約 210ms／フォーム、入力トークン約 5,800／フォーム
+    - 0.95 未満: pref 0.94・address-line1 0.92・address-line2 0.68（building）
+  - 決定: 閾値は **0.85** のまま（0.85〜0.9 で自動入力 34/35・誤入力 0）。autocomplete 付きの欄は Jev より確実なので T8 のルールで先に確定させる（address-line2 対策）
 
 ## M3: 判定と整形（core）
 - [ ] **T8 ルール判定**: `core/rules.ts`（autocomplete の対応表、日本語・英語の正規表現、あいまいな欄は null を返す）

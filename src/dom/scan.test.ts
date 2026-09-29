@@ -51,6 +51,10 @@ describe("scanFields: label[for] 型", () => {
     expect(document.querySelector("#sei")?.getAttribute("data-afj-id")).toBe(sei.id);
     expect(new Set(fields.map((f) => f.id)).size).toBe(fields.length);
   });
+
+  it("ID はページ側の name（f1 等）と紛れない afj- 接頭辞にする", () => {
+    expect(scanFields(document).map((f) => f.id)).toEqual(["afj-0", "afj-1", "afj-2", "afj-3", "afj-4", "afj-5", "afj-6"]);
+  });
 });
 
 describe("scanFields: テーブル型", () => {

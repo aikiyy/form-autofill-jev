@@ -39,7 +39,8 @@ export function scanFields(root: Document): FieldDescriptor[] {
     if (!isTarget(el)) continue;
 
     const index = fields.length;
-    const id = `f${index}`;
+    // ページ側の name/id（f1 等）と紛れると Jev が別の欄と取り違えるため、独自の接頭辞を付ける
+    const id = `afj-${index}`;
 
     if (el instanceof HTMLInputElement && el.type === "radio") {
       const groupKey = `${el.form ? formKey(el.form) : ""}::${el.name}`;
