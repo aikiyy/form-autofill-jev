@@ -406,3 +406,18 @@ describe("resolveFills: パスポートのフィクスチャ", () => {
     });
   });
 });
+
+describe("resolveFills: パスポートのフィクスチャ（任意の有効期限）", () => {
+  it("実際のフォームと同じく選択肢が全範囲あれば、どの日付でも有効期限の年月日が入る", () => {
+    loadFixture("passport.html");
+    const fields = scanFields(document);
+    const assignments = fields.map(classifyByRules).filter((a): a is Assignment => a !== null);
+    const byId = new Map(fields.map((f) => [f.id, f.name]));
+    const out: Record<string, string> = {};
+    for (const r of resolveFills(fields, assignments, { ...profile, passportExpiry: "2035-03-10" })) {
+      out[byId.get(r.fieldId)!] = r.status === "fill" ? r.value : `review:${r.reason}`;
+    }
+    expect(out).toMatchObject({ exp_y: "2035", exp_m: "3", exp_d: "10" });
+  });
+});
+
