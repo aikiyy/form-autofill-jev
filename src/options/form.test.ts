@@ -17,6 +17,10 @@ const valid: Profile = {
   building: "",
   birthDate: "1988-03-17",
   gender: "male",
+  passportNumber: "TK1234567",
+  passportExpiry: "2031-08-15",
+  lastNameRoman: "YAMADA",
+  firstNameRoman: "TARO",
 };
 
 describe("normalizeProfile", () => {
@@ -28,6 +32,12 @@ describe("normalizeProfile", () => {
     const p = normalizeProfile({ ...valid, tel: "０９０ー１２３４ー５６７８" });
     expect(p.tel).toBe("090-1234-5678");
     expect(normalizeProfile({ ...valid, postalCode: "1500001" }).postalCode).toBe("150-0001");
+  });
+
+  it("旅券番号・ローマ字は半角の大文字にする", () => {
+    const p = normalizeProfile({ ...valid, passportNumber: "ｔｋ１２３４５６７", lastNameRoman: " yamada " });
+    expect(p.passportNumber).toBe("TK1234567");
+    expect(p.lastNameRoman).toBe("YAMADA");
   });
 
   it("郵便番号が7桁でなければ手を加えない（検証でエラーにする）", () => {
@@ -48,6 +58,10 @@ describe("validateProfile", () => {
     ["lastNameKana", "山田"],
     ["firstNameKana", "Taro"],
     ["birthDate", "1988/03/17"],
+    ["passportNumber", "TK-123"],
+    ["passportExpiry", "2031/08/15"],
+    ["lastNameRoman", "山田"],
+    ["firstNameRoman", "Taro1"],
   ])("%s が「%s」ならエラー", (key, value) => {
     const errors = validateProfile({ ...valid, [key]: value });
     expect(errors).toEqual([{ key, message: expect.any(String) }]);

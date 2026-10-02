@@ -52,7 +52,7 @@ function byAutocomplete(field: FieldDescriptor): FieldKey | null {
   const tokens = field.autocomplete.toLowerCase().split(/\s+/);
   for (const token of tokens.reverse()) {
     const key = AUTOCOMPLETE_MAP[token];
-    if (key) return withKana(key, isKana(field));
+    if (key) return withNameVariant(key, field);
   }
   return null;
 }
@@ -95,9 +95,17 @@ const OTHER_PATTERNS: { key: FieldKey; text: RegExp; tokens: string[] }[] = [
   { key: "street", text: /番地|丁目|町名|\bstreet\b/i, tokens: ["street", "banchi"] },
   { key: "building", text: /建物|マンション|ビル名|部屋番号|building|apartment/i, tokens: ["building", "bldg", "tatemono", "apartment", "apt"] },
   { key: "birthDate", text: /生年月日|誕生日|birth|bday/i, tokens: ["birth", "birthday", "birthdate", "bday", "dob", "tanjobi", "seinengappi"] },
+  {
+    key: "passportNumber",
+    text: /旅券番号|パスポート番号|passport\s*(no\b|number|#)/i,
+    tokens: [],
+  },
   { key: "age", text: /年齢|\bage\b/i, tokens: ["age", "nenrei"] },
   { key: "gender", text: /性別|gender/i, tokens: ["gender", "sex", "seibetsu"] },
 ];
+
+const PASSPORT_TEXT = /旅券|パスポート|passport/i;
+const EXPIRY_TEXT = /有効期限|有効期間|満了|expir|valid/i;
 
 const LAST_NAME_TEXT = /姓|名字|苗字|セイ|せい|last\s*name|family\s*name|surname/i;
 /** 「名」は単独（先頭・括弧や区切りの直後）のときだけ。「氏名」「お名前」「名字」「建物名」等は除く */
@@ -128,6 +136,14 @@ function byText(field: FieldDescriptor): FieldKey | null {
   }
   if (field.type === "email") fromTokens.add("email");
 
+  // 旅券は name の「passport」＋「no / expiry」の組み合わせで判定する
+  if (tokens.has("passport")) {
+    if (["no", "number", "num"].some((t) => tokens.has(t))) fromTokens.add("passportNumber");
+    if (["expiry", "expire", "expiration", "exp", "valid"].some((t) => tokens.has(t))) fromTokens.add("passportExpiry");
+  }
+  // 「有効期限」はクレジットカードと区別できないので、旅券の文脈があるときだけ
+  if (PASSPORT_TEXT.test(text) && EXPIRY_TEXT.test(text)) fromText.add("passportExpiry");
+
   const textName = nameFromText(text);
   if (textName) fromText.add(textName);
   const tokenName = nameFromTokens(tokens);
@@ -139,7 +155,7 @@ function byText(field: FieldDescriptor): FieldKey | null {
   const [b] = fromTokens;
   if (a && b && a !== b) return null;
   const key = a ?? b;
-  return key ? withKana(key, isKana(field)) : null;
+  return key ? withNameVariant(key, field) : null;
 }
 
 function nameFromText(text: string): FieldKey | null {
@@ -176,8 +192,27 @@ const KANA_VARIANT: Partial<Record<FieldKey, FieldKey>> = {
   fullName: "fullNameKana",
 };
 
-function withKana(key: FieldKey, kana: boolean): FieldKey {
-  return kana ? (KANA_VARIANT[key] ?? key) : key;
+const ROMAN_VARIANT: Partial<Record<FieldKey, FieldKey>> = {
+  lastName: "lastNameRoman",
+  firstName: "firstNameRoman",
+  fullName: "fullNameRoman",
+};
+
+/** ローマ字の手がかり（パスポート記載の氏名は英字） */
+const ROMAN_TEXT = /ローマ字|英字|アルファベット|英語表記|romaji|roman|alphabet|旅券|パスポート|passport/i;
+const LATIN_ONLY = /^[A-Za-z][A-Za-z\s'-]*$/;
+
+/** 氏名の欄がローマ字用かどうか（カナより優先して判定する） */
+function isRoman(field: FieldDescriptor): boolean {
+  if (ROMAN_TEXT.test(`${field.label} ${field.ariaLabel} ${field.nearbyText}`)) return true;
+  return field.placeholder !== "" && LATIN_ONLY.test(field.placeholder.trim());
+}
+
+/** 氏名の項目を、欄の手がかりに応じてローマ字・カナ用に読み替える */
+function withNameVariant(key: FieldKey, field: FieldDescriptor): FieldKey {
+  if (isRoman(field)) return ROMAN_VARIANT[key] ?? key;
+  if (isKana(field)) return KANA_VARIANT[key] ?? key;
+  return key;
 }
 
 /** name / id 属性を単語に分ける（sei_kana → sei, kana / lastName → last, name / tel2 → tel, 2） */

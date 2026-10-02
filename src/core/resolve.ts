@@ -5,6 +5,7 @@ import {
   formatDate,
   formatKana,
   formatPostal,
+  formatRoman,
   formatTel,
   genderCandidates,
   matchOption,
@@ -21,7 +22,13 @@ import type { Assignment, FieldDescriptor, FieldKey, FillInstruction, Profile } 
 export const CONFIDENCE_THRESHOLD = 0.85;
 
 /** 隣り合う複数の欄に分けて入力する項目 */
-const SPLIT_KEYS: ReadonlySet<FieldKey> = new Set(["tel", "postalCode", "birthDate"]);
+const SPLIT_KEYS: ReadonlySet<FieldKey> = new Set(["tel", "postalCode", "birthDate", "passportExpiry"]);
+
+/** 日付の項目（年月日の分割欄・select・1欄に対応する） */
+type DateKey = "birthDate" | "passportExpiry";
+function isDateKey(key: FieldKey): key is DateKey {
+  return key === "birthDate" || key === "passportExpiry";
+}
 /** 隣り合う複数の欄に同じ値を入れてよい項目（メールアドレスと確認用） */
 const REPEATABLE_KEYS: ReadonlySet<FieldKey> = new Set(["email"]);
 
@@ -33,6 +40,7 @@ const REASON = {
   unsupportedFormat: "この欄の書式（半角カナ等）には対応していません",
   invalidValue: "プロフィールの値がこの欄の形式に合いません",
   textGender: "性別の表記が決められません",
+  nameOrder: "ローマ字の姓名の順序が決められません",
 } as const;
 
 interface Target {
@@ -129,6 +137,8 @@ function hasValue(key: FieldKey, p: Profile): boolean {
       return Boolean(p.lastName || p.firstName);
     case "fullNameKana":
       return Boolean(p.lastNameKana || p.firstNameKana);
+    case "fullNameRoman":
+      return Boolean(p.lastNameRoman || p.firstNameRoman);
     case "address":
       return Boolean(p.prefecture || p.city || p.street || p.building);
     case "age":
@@ -148,7 +158,7 @@ function resolveGroup(key: FieldKey, fields: readonly FieldDescriptor[], ctx: Co
 
   if (key === "tel" && fields.length === 3) return fillParts(fields, splitTel(profile.tel));
   if (key === "postalCode" && fields.length === 2) return fillParts(fields, splitPostal(profile.postalCode));
-  if (key === "birthDate" && fields.length <= 3) return resolveBirthParts(fields, profile.birthDate);
+  if (isDateKey(key) && fields.length <= 3) return resolveDateParts(fields, profile[key]);
   return fields.map((f) => review(f, REASON.cannotSplit));
 }
 
@@ -174,6 +184,16 @@ function resolveSingle(key: FieldKey, field: FieldDescriptor, ctx: Context): Fil
       return textValue(field, formatKana(p[key], field));
     case "fullNameKana":
       return textValue(field, formatKana(joinName(p.lastNameKana, p.firstNameKana), field));
+    case "passportNumber":
+    case "lastNameRoman":
+    case "firstNameRoman":
+      return textValue(field, formatRoman(p[key], field));
+    case "fullNameRoman": {
+      const order = romanNameOrder(field);
+      if (!order) return review(field, REASON.nameOrder);
+      const [a, b] = order === "surnameFirst" ? [p.lastNameRoman, p.firstNameRoman] : [p.firstNameRoman, p.lastNameRoman];
+      return textValue(field, formatRoman(joinName(a, b), field));
+    }
     case "tel":
       return textValue(field, formatTel(p.tel, field));
     case "postalCode": {
@@ -184,9 +204,10 @@ function resolveSingle(key: FieldKey, field: FieldDescriptor, ctx: Context): Fil
       return isChoice(field) ? choiceValue(field, prefectureCandidates(p.prefecture)) : textValue(field, p.prefecture);
     case "address":
       return textValue(field, composeAddress(p, presentKeys));
-    case "birthDate": {
+    case "birthDate":
+    case "passportExpiry": {
       if (isChoice(field)) return review(field, REASON.cannotSplit);
-      const value = formatDate(p.birthDate, field);
+      const value = formatDate(p[key], field);
       return value === null ? review(field, REASON.invalidValue) : textValue(field, value);
     }
     case "age": {
@@ -205,6 +226,18 @@ function joinName(last: string, first: string): string {
   return [last, first].filter(Boolean).join(" ");
 }
 
+const SURNAME_FIRST = /姓\s*[・･,、/／]?\s*名|last\s*[,/]?\s*first|(surname|family\s*name)\s*[,/]?\s*(given|first)/i;
+const GIVEN_FIRST = /名\s*[・･,、/／]?\s*姓|first\s*[,/]?\s*last|given\s*(name)?\s*[,/]?\s*(surname|family|last)/i;
+
+/** ローマ字1欄の姓名の順序。手がかりがない・食い違うなら null（推測で入れると誤入力になる） */
+function romanNameOrder(field: FieldDescriptor): "surnameFirst" | "givenFirst" | null {
+  const hint = `${field.label} ${field.ariaLabel} ${field.nearbyText} ${field.placeholder}`;
+  const surnameFirst = SURNAME_FIRST.test(hint);
+  const givenFirst = GIVEN_FIRST.test(hint);
+  if (surnameFirst === givenFirst) return null;
+  return surnameFirst ? "surnameFirst" : "givenFirst";
+}
+
 /** 住所1欄。都道府県・市区町村・番地・建物名のうち、別の欄があるものは含めない */
 function composeAddress(p: Profile, presentKeys: ReadonlySet<FieldKey>): string {
   const main = (["prefecture", "city", "street"] as const)
@@ -217,14 +250,14 @@ function composeAddress(p: Profile, presentKeys: ReadonlySet<FieldKey>): string 
 
 type DatePart = "year" | "month" | "day";
 
-/** 生年月日の分割欄（select または input）に年・月・日を割り当てて入力する */
-function resolveBirthParts(fields: readonly FieldDescriptor[], birthDate: string): FillInstruction[] {
+/** 日付（生年月日・旅券の有効期限）の分割欄（select または input）に年・月・日を割り当てて入力する */
+function resolveDateParts(fields: readonly FieldDescriptor[], date: string): FillInstruction[] {
   const roles = assignDateRoles(fields);
   if (!roles) return fields.map((f) => review(f, REASON.cannotSplit));
   return fields.map((f, i) => {
     const role = roles[i]!;
-    if (isChoice(f)) return choiceValue(f, datePartCandidates(role, birthDate));
-    const value = datePartText(role, birthDate, f);
+    if (isChoice(f)) return choiceValue(f, datePartCandidates(role, date));
+    const value = datePartText(role, date, f);
     return value === null ? review(f, REASON.invalidValue) : textValue(f, value);
   });
 }
@@ -264,8 +297,8 @@ function roleFromOptions(field: FieldDescriptor): DatePart | null {
   return "month";
 }
 
-function datePartText(role: DatePart, birthDate: string, field: FieldDescriptor): string | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+function datePartText(role: DatePart, date: string, field: FieldDescriptor): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!m) return null;
   if (role === "year") return m[1]!;
   const padded = role === "month" ? m[2]! : m[3]!;

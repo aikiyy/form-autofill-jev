@@ -10,7 +10,7 @@ const HYPHENS = /[-‐‑–—−ー－]/g;
 
 /**
  * 保存前にプロフィールの表記をそろえる。
- * フリガナはカタカナに、電話番号は半角のハイフン区切りに、郵便番号は 000-0000 にする。
+ * フリガナはカタカナに、電話番号は半角のハイフン区切りに、郵便番号は 000-0000 に、旅券番号・ローマ字は半角大文字にする。
  */
 export function normalizeProfile(profile: Profile): Profile {
   const tel = toHalfWidth(profile.tel).replace(HYPHENS, "-").replace(/\s+/g, "");
@@ -21,9 +21,18 @@ export function normalizeProfile(profile: Profile): Profile {
     firstNameKana: toKatakana(profile.firstNameKana),
     tel,
     postalCode: postal ? postal.join("-") : profile.postalCode,
+    passportNumber: toUpperHalf(profile.passportNumber),
+    lastNameRoman: toUpperHalf(profile.lastNameRoman),
+    firstNameRoman: toUpperHalf(profile.firstNameRoman),
   };
 }
 
+/** 旅券番号・ローマ字: 半角の大文字にし、前後の空白を除く */
+function toUpperHalf(value: string): string {
+  return toHalfWidth(value).trim().toUpperCase();
+}
+
+const ROMAN_NAME = /^[A-Z][A-Z '-]*$/;
 const KATAKANA_ONLY = /^[゠-ヿ\s　]+$/;
 
 /**
@@ -45,5 +54,10 @@ export function validateProfile(p: Profile): ValidationError[] {
   check("lastNameKana", KATAKANA_ONLY.test(p.lastNameKana), "カタカナで入力してください");
   check("firstNameKana", KATAKANA_ONLY.test(p.firstNameKana), "カタカナで入力してください");
   check("birthDate", /^\d{4}-\d{2}-\d{2}$/.test(p.birthDate), "生年月日を正しく入力してください");
+  // 日本の旅券は英字2＋数字7桁。外国の旅券も考慮して英数字6〜12文字まで許す
+  check("passportNumber", /^[A-Z0-9]{6,12}$/.test(p.passportNumber), "旅券番号は英数字で入力してください");
+  check("passportExpiry", /^\d{4}-\d{2}-\d{2}$/.test(p.passportExpiry), "有効期限を正しく入力してください");
+  check("lastNameRoman", ROMAN_NAME.test(p.lastNameRoman), "ローマ字（英大文字）で入力してください");
+  check("firstNameRoman", ROMAN_NAME.test(p.firstNameRoman), "ローマ字（英大文字）で入力してください");
   return errors;
 }

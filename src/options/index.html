@@ -60,6 +60,17 @@
         </section>
 
         <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
+          <h2 class="font-semibold">パスポート</h2>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label class="block text-sm">旅券番号<input name="passportNumber" class="field" placeholder="TK1234567" autocomplete="off" /></label>
+            <label class="block text-sm">有効期限<input name="passportExpiry" type="date" class="field" /></label>
+            <label class="block text-sm">姓（ローマ字）<input name="lastNameRoman" class="field" placeholder="YAMADA" /></label>
+            <label class="block text-sm">名（ローマ字）<input name="firstNameRoman" class="field" placeholder="TARO" /></label>
+          </div>
+          <p class="text-xs text-slate-500">ローマ字はパスポートの表記どおりに入力してください</p>
+        </section>
+
+        <section class="space-y-4 rounded-lg bg-white p-5 shadow-sm">
           <h2 class="font-semibold">Jev（TypeSafe）APIキー</h2>
           <label class="block text-sm"
             >APIキー<input name="apiKey" type="password" class="field" autocomplete="off" />

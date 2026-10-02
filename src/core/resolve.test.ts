@@ -19,6 +19,10 @@ const profile: Profile = {
   building: "ハイツ101",
   birthDate: "1988-03-17",
   gender: "male",
+  passportNumber: "TK1234567",
+  passportExpiry: "2031-08-15",
+  lastNameRoman: "YAMADA",
+  firstNameRoman: "TARO",
 };
 
 let seq = 0;
@@ -352,5 +356,53 @@ describe("resolveFills: 年月日のテキスト欄", () => {
     const d = field({ label: "生年月日 日", maxLength: 2 });
     const result = resolveFills([d, m, y].sort((a, b) => a.index - b.index), [rule(y, "birthDate"), rule(m, "birthDate"), rule(d, "birthDate")], profile);
     expect(result).toEqual([fill(y, "1988"), fill(m, "03"), fill(d, "17")]);
+  });
+});
+
+describe("resolveFills: パスポート", () => {
+  it("旅券番号・ローマ字の姓名を入れる（placeholder が先頭大文字なら合わせる）", () => {
+    const [n, l, f] = [field(), field(), field({ placeholder: "Taro" })];
+    const result = resolveFills([n, l, f], [rule(n, "passportNumber"), rule(l, "lastNameRoman"), rule(f, "firstNameRoman")], profile);
+    expect(result).toEqual([fill(n, "TK1234567"), fill(l, "YAMADA"), fill(f, "Taro")]);
+  });
+
+  it("ローマ字1欄は順序の手がかりがあるときだけ入れ、なければ要確認", () => {
+    const surnameFirst = field({ label: "氏名（ローマ字・姓 名の順）" });
+    const givenFirst = field({ label: "Name (first last)" });
+    const unknown = field({ label: "氏名（ローマ字）" });
+    expect(resolveFills([surnameFirst], [rule(surnameFirst, "fullNameRoman")], profile)).toEqual([fill(surnameFirst, "YAMADA TARO")]);
+    expect(resolveFills([givenFirst], [rule(givenFirst, "fullNameRoman")], profile)).toEqual([fill(givenFirst, "TARO YAMADA")]);
+    expect(resolveFills([unknown], [rule(unknown, "fullNameRoman")], profile)[0]?.status).toBe("review");
+  });
+
+  it("有効期限は1欄なら書式に合わせ、年月日の分割欄にも入れる", () => {
+    const a = field({ type: "date" });
+    expect(resolveFills([a], [rule(a, "passportExpiry")], profile)).toEqual([fill(a, "2031-08-15")]);
+  });
+
+  it("パスポート情報が未設定なら入力しない", () => {
+    const a = field();
+    expect(resolveFills([a], [rule(a, "passportNumber")], { ...profile, passportNumber: "" })).toEqual([]);
+  });
+});
+
+describe("resolveFills: パスポートのフィクスチャ", () => {
+  it("ローマ字姓名・旅券番号・有効期限（年月日 select）が入り、発行日・カード有効期限は入れない", () => {
+    loadFixture("passport.html");
+    const fields = scanFields(document);
+    const assignments = fields.map(classifyByRules).filter((a): a is Assignment => a !== null);
+    const byId = new Map(fields.map((f) => [f.id, f.name]));
+    const out: Record<string, string> = {};
+    for (const r of resolveFills(fields, assignments, profile)) {
+      out[byId.get(r.fieldId)!] = r.status === "fill" ? r.value : `review:${r.reason}`;
+    }
+    expect(out).toEqual({
+      pax_last: "YAMADA",
+      pax_first: "TARO",
+      pax_passport_no: "TK1234567",
+      exp_y: "2031",
+      exp_m: "8",
+      exp_d: "15",
+    });
   });
 });

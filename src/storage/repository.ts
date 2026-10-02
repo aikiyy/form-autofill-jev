@@ -22,6 +22,10 @@ export const EMPTY_PROFILE: Readonly<Profile> = Object.freeze({
   building: "",
   birthDate: "",
   gender: "",
+  passportNumber: "",
+  passportExpiry: "",
+  lastNameRoman: "",
+  firstNameRoman: "",
 });
 
 const GENDERS: readonly Gender[] = ["male", "female", "other", ""];

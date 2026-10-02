@@ -31,6 +31,14 @@ export interface Profile {
   /** YYYY-MM-DD */
   birthDate: string;
   gender: Gender;
+  /** 旅券番号（半角英大文字・数字、例: TK1234567） */
+  passportNumber: string;
+  /** 旅券の有効期限（YYYY-MM-DD） */
+  passportExpiry: string;
+  /** パスポート表記のローマ字の姓（半角英大文字、例: YAMADA） */
+  lastNameRoman: string;
+  /** パスポート表記のローマ字の名（半角英大文字、例: TARO） */
+  firstNameRoman: string;
 }
 
 export type ProfileKey = keyof Profile;
@@ -46,6 +54,9 @@ export const FIELD_KEYS = [
   "lastNameKana",
   "firstNameKana",
   "fullNameKana",
+  "lastNameRoman",
+  "firstNameRoman",
+  "fullNameRoman",
   "email",
   "tel",
   "postalCode",
@@ -57,6 +68,8 @@ export const FIELD_KEYS = [
   "birthDate",
   "age",
   "gender",
+  "passportNumber",
+  "passportExpiry",
   "none",
 ] as const;
 

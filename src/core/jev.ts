@@ -15,12 +15,15 @@ const MAX_OPTIONS_IN_STATE = 60;
 
 /** Choice の選択肢ごとの説明。Jev は英語が得意なので英語を主にし、日本語の表記例を添える */
 export const FIELD_KEY_CRITERIA: Record<FieldKey, string> = {
-  lastName: "Family name / surname only (姓, 名字). Not phonetic.",
-  firstName: "Given name only (名, 名前). Not phonetic.",
-  fullName: "Full name in one field (氏名, お名前, 名前). Not phonetic.",
+  lastName: "Family name / surname only (姓, 名字). Not phonetic, not romanized.",
+  firstName: "Given name only (名, 名前). Not phonetic, not romanized.",
+  fullName: "Full name in one field (氏名, お名前, 名前). Not phonetic, not romanized.",
   lastNameKana: "Phonetic reading of the family name (セイ, フリガナ 姓, ふりがな せい).",
   firstNameKana: "Phonetic reading of the given name (メイ, フリガナ 名, ふりがな めい).",
   fullNameKana: "Phonetic reading of the full name in one field (フリガナ, ふりがな, カナ氏名).",
+  lastNameRoman: "Family name in Latin letters as in the passport (姓 ローマ字, Surname in English).",
+  firstNameRoman: "Given name in Latin letters as in the passport (名 ローマ字, Given name in English).",
+  fullNameRoman: "Full name in Latin letters in one field, as in the passport (氏名 ローマ字, パスポート記載のお名前).",
   email: "Email address, including confirmation fields (メールアドレス, 確認用).",
   tel: "Phone number or one part of a split phone number (電話番号, 携帯電話, 連絡先電話).",
   postalCode: "Postal / ZIP code or one part of a split postal code (郵便番号, 〒).",
@@ -32,6 +35,8 @@ export const FIELD_KEY_CRITERIA: Record<FieldKey, string> = {
   birthDate: "Date of birth or one part of it: year, month or day (生年月日, 誕生日).",
   age: "Age in years (年齢, 歳).",
   gender: "Gender / sex (性別).",
+  passportNumber: "Passport number (旅券番号, パスポート番号).",
+  passportExpiry: "Passport expiry date or one part of it (パスポート有効期限, 旅券の有効期間満了日). Not a credit card expiry, not the issue date.",
   none: "None of the above: not the applicant's own personal information. Includes fields about another person (guardian, companion, emergency contact, family, etc.), messages, company, coupon, password, agreement.",
 };
 

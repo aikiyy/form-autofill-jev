@@ -198,6 +198,45 @@ describe("classifyByRules: 年齢", () => {
   });
 });
 
+describe("classifyByRules: パスポート", () => {
+  it.each<[Partial<FieldDescriptor>, FieldKey]>([
+    [{ label: "旅券番号" }, "passportNumber"],
+    [{ label: "パスポート番号" }, "passportNumber"],
+    [{ label: "Passport No." }, "passportNumber"],
+    [{ name: "passport_no" }, "passportNumber"],
+    [{ name: "passportNumber" }, "passportNumber"],
+    [{ label: "パスポート有効期限" }, "passportExpiry"],
+    [{ label: "旅券の有効期間満了日" }, "passportExpiry"],
+    [{ label: "Passport expiry date" }, "passportExpiry"],
+    [{ name: "passport_expiry" }, "passportExpiry"],
+  ])("%o → %s", (overrides, expected) => {
+    expect(keyOf(overrides)).toBe(expected);
+  });
+
+  it.each(["有効期限", "カード有効期限", "パスポート発行日"])("「%s」は旅券の有効期限と断定しない", (label) => {
+    expect(keyOf({ label })).toBeNull();
+  });
+});
+
+describe("classifyByRules: ローマ字氏名", () => {
+  it.each<[Partial<FieldDescriptor>, FieldKey]>([
+    [{ label: "姓（ローマ字）" }, "lastNameRoman"],
+    [{ label: "名（ローマ字）" }, "firstNameRoman"],
+    [{ label: "氏名（英字）" }, "fullNameRoman"],
+    [{ label: "パスポート記載のお名前" }, "fullNameRoman"],
+    [{ label: "姓", placeholder: "YAMADA" }, "lastNameRoman"],
+    [{ label: "Last name", placeholder: "Yamada" }, "lastNameRoman"],
+    [{ autocomplete: "given-name", label: "名（アルファベット）" }, "firstNameRoman"],
+  ])("%o → %s", (overrides, expected) => {
+    expect(keyOf(overrides)).toBe(expected);
+  });
+
+  it("ローマ字の手がかりがなければ漢字の氏名のまま", () => {
+    expect(keyOf({ label: "姓" })).toBe("lastName");
+    expect(keyOf({ autocomplete: "family-name", ariaLabel: "Last name" })).toBe("lastName");
+  });
+});
+
 describe("classifyByRules: フィクスチャ全欄で誤判定しない", () => {
   it.each(Object.keys(EXPECTED))("%s: ルールの結果は null か正解のどちらか", (fixture) => {
     loadFixture(fixture);

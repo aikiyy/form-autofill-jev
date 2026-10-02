@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>航空券予約（搭乗者・パスポート情報）</title></head>
+<body>
+<form>
+  <h2>搭乗者情報</h2>
+  <table>
+    <tr><th>姓（ローマ字）</th><td><input name="pax_last" placeholder="YAMADA"></td></tr>
+    <tr><th>名（ローマ字）</th><td><input name="pax_first" placeholder="TARO"></td></tr>
+    <tr><th>旅券番号</th><td><input name="pax_passport_no" maxlength="9"></td></tr>
+    <tr><th>パスポート有効期限</th><td>
+      <select name="exp_y"><option value="">----</option><option>2030</option><option>2031</option><option>2032</option></select>年
+      <select name="exp_m"><option value="">--</option><option>1</option><option>8</option><option>12</option></select>月
+      <select name="exp_d"><option value="">--</option><option>1</option><option>15</option><option>31</option></select>日
+    </td></tr>
+    <!-- 対象外の項目（入力しない） -->
+    <tr><th>パスポート発行日</th><td><input name="issue_date" type="date"></td></tr>
+  </table>
+
+  <h2>お支払い</h2>
+  <table>
+    <!-- 「有効期限」でもクレジットカードのもの（入力しない） -->
+    <tr><th>カード有効期限</th><td>
+      <select name="card_m"><option value="">--</option><option>08</option><option>12</option></select>月 /
+      <select name="card_y"><option value="">--</option><option>2031</option><option>2032</option></select>年
+    </td></tr>
+  </table>
+</form>
+</body>
+</html>

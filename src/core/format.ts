@@ -50,6 +50,15 @@ export function formatKana(katakana: string, field: FieldDescriptor): string {
   return toKatakana(katakana);
 }
 
+/**
+ * 旅券番号・ローマ字氏名を半角の大文字にする。placeholder が「Yamada」のような先頭だけ大文字なら合わせる。
+ */
+export function formatRoman(value: string, field: FieldDescriptor): string {
+  const upper = toHalfWidth(value).toUpperCase();
+  if (!/^[A-Z][a-z]+/.test(field.placeholder.trim())) return upper;
+  return upper.toLowerCase().replace(/(^|[\s'-])([a-z])/g, (_, sep: string, c: string) => sep + c.toUpperCase());
+}
+
 // ---- 電話番号・郵便番号 ----
 
 const HYPHENS = /[-‐‑–—−ー－]/g;

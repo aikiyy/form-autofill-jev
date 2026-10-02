@@ -63,4 +63,16 @@ export const EXPECTED: Record<string, Record<string, FieldKey>> = {
     field_21: "none",
     field_22: "none",
   },
+  "passport.html": {
+    pax_last: "lastNameRoman",
+    pax_first: "firstNameRoman",
+    pax_passport_no: "passportNumber",
+    exp_y: "passportExpiry",
+    exp_m: "passportExpiry",
+    exp_d: "passportExpiry",
+    // 発行日・クレジットカードの有効期限は入力しない
+    issue_date: "none",
+    card_m: "none",
+    card_y: "none",
+  },
 };

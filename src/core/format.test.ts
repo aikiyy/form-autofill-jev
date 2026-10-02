@@ -4,6 +4,7 @@ import {
   datePartCandidates,
   formatDate,
   formatKana,
+  formatRoman,
   formatPostal,
   formatTel,
   genderCandidates,
@@ -181,5 +182,17 @@ describe("選択肢の候補", () => {
   it("都道府県は「都・府・県」を省いた表記にも一致する（北海道は省かない）", () => {
     expect(matchOption([{ value: "13", text: "東京" }], prefectureCandidates("東京都"))).toBe("13");
     expect(matchOption([{ value: "1", text: "北海道" }], prefectureCandidates("北海道"))).toBe("1");
+  });
+});
+
+describe("formatRoman", () => {
+  it("半角の大文字にする", () => {
+    expect(formatRoman("ｙａｍａｄａ", field())).toBe("YAMADA");
+    expect(formatRoman("tk1234567", field())).toBe("TK1234567");
+  });
+
+  it("placeholder が先頭だけ大文字なら合わせる", () => {
+    expect(formatRoman("YAMADA", field({ placeholder: "Yamada" }))).toBe("Yamada");
+    expect(formatRoman("MARY ANN", field({ placeholder: "Taro" }))).toBe("Mary Ann");
   });
 });
