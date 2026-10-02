@@ -86,7 +86,7 @@
 - [ ] **T19 暗号化**（任意でオン/オフ・解除はブラウザ終了まで・ロック中はポップアップで解除してそのまま入力）
   - 方式: PBKDF2-SHA256 60万回 → AES-GCM 256bit。プロフィールと APIキーをまとめて1つの暗号文（`vault`）にし、解除中の鍵は chrome.storage.session に置く
   - [x] T19a crypto.ts（往復・パスフレーズ違い・毎回 IV/salt が変わる）
-  - [ ] T19b repository の vault 対応（状態遷移・平文の削除・解除中の保存が暗号文のまま・LockedError・オフで平文に戻る）
+  - [x] T19b repository の vault 対応（状態遷移・平文の削除・解除中の保存が暗号文のまま・LockedError・オフで平文に戻る）
   - [ ] T19c background（ポップアップ切り替え・LockedError のトースト）
   - [ ] T19d 設定画面（有効化・解除・変更・無効化・リセット）
   - [ ] T19e 解除ポップアップ＋そのまま入力。Chrome でユーザー確認
