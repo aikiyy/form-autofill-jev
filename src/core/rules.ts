@@ -6,8 +6,20 @@ import type { Assignment, FieldDescriptor, FieldKey } from "./types.ts";
  * @returns 確定した判定（confidence 1）。確定できなければ null
  */
 export function classifyByRules(field: FieldDescriptor): Assignment | null {
-  const key = byAutocomplete(field) ?? byText(field);
+  const key = isOtherPerson(field) ? "none" : (byAutocomplete(field) ?? byText(field));
   return key ? { fieldId: field.id, key, confidence: 1, source: "rule" } : null;
+}
+
+// ---- 自分以外の人の欄 ----
+
+/** 保護者・同行者など、本人以外の人の情報を入れる欄。プロフィールの値を入れると誤入力になる */
+const OTHER_PERSON_TEXT =
+  /保護者|同行者|同伴者|代理人|緊急連絡先|受信契約者|紹介者|保証人|配偶者|ご家族|家族の|お子様|お子さま|子ども|子供/;
+const OTHER_PERSON_TOKENS = new Set(["guardian", "parent", "companion", "emergency", "spouse", "referrer", "family", "child"]);
+
+function isOtherPerson(field: FieldDescriptor): boolean {
+  if (OTHER_PERSON_TEXT.test(`${field.label} ${field.ariaLabel}`)) return true;
+  return [...identTokens(field)].some((t) => OTHER_PERSON_TOKENS.has(t));
 }
 
 // ---- autocomplete ----
@@ -83,6 +95,7 @@ const OTHER_PATTERNS: { key: FieldKey; text: RegExp; tokens: string[] }[] = [
   { key: "street", text: /番地|丁目|町名|\bstreet\b/i, tokens: ["street", "banchi"] },
   { key: "building", text: /建物|マンション|ビル名|部屋番号|building|apartment/i, tokens: ["building", "bldg", "tatemono", "apartment", "apt"] },
   { key: "birthDate", text: /生年月日|誕生日|birth|bday/i, tokens: ["birth", "birthday", "birthdate", "bday", "dob", "tanjobi", "seinengappi"] },
+  { key: "age", text: /年齢|\bage\b/i, tokens: ["age", "nenrei"] },
   { key: "gender", text: /性別|gender/i, tokens: ["gender", "sex", "seibetsu"] },
 ];
 

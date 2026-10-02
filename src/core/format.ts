@@ -120,6 +120,19 @@ export function formatDate(date: string, field: FieldDescriptor): string | null 
   return `${y}${sep}${mo}${sep}${d}`;
 }
 
+/**
+ * 生年月日（YYYY-MM-DD）から、指定日時点の満年齢を計算する（誕生日当日に1つ増える）。
+ * @returns 不正な日付・指定日より後の生年月日なら null
+ */
+export function calcAge(birthDate: string, today: Date): number | null {
+  const m = ISO_DATE.exec(birthDate);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const beforeBirthday = today.getMonth() + 1 < mo || (today.getMonth() + 1 === mo && today.getDate() < d);
+  const age = today.getFullYear() - y - (beforeBirthday ? 1 : 0);
+  return age >= 0 ? age : null;
+}
+
 /** 生年月日の年・月・日を select で選ぶときの候補（「5」「05」「5月」など） */
 export function datePartCandidates(part: "year" | "month" | "day", date: string): string[] {
   const m = ISO_DATE.exec(date);

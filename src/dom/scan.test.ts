@@ -130,3 +130,40 @@ describe("scanFields: autocomplete 付き英語フォーム", () => {
     expect(byName(fields, "j")).toMatchObject({ type: "date", label: "Birthday", autocomplete: "bday" });
   });
 });
+
+describe("scanFields: 1つの欄に複数の label・区切り label 型", () => {
+  beforeEach(() => loadFixture("multi-label.html"));
+
+  it("同じ欄を指す label をすべて出現順につなげる（タイトル・注記・個別ラベル）", () => {
+    const fields = scanFields(document);
+    expect(byName(fields, "field_01").label).toBe("申込者のお名前 全角 姓");
+    expect(byName(fields, "field_03").label).toBe("申込者のお名前（フリガナ） 全角カタカナ セイ");
+    expect(byName(fields, "field_15").label).toBe("年齢 半角数字 歳");
+  });
+
+  it("label が「-」だけの分割欄は、直前の欄の項目名を引き継ぐ", () => {
+    const fields = scanFields(document);
+    expect(byName(fields, "field_06").label).toBe("電話番号（日中連絡がとれるもの） 半角数字");
+    expect(byName(fields, "field_07").label).toBe("電話番号（日中連絡がとれるもの） 半角数字");
+    expect(byName(fields, "field_09").label).toBe("住所 〒");
+  });
+
+  it("「年」「月」「日」だけの label は、直前の欄の項目名に付け足す", () => {
+    const fields = scanFields(document);
+    expect(byName(fields, "field_14Year").label).toBe("生年月日 半角数字 年");
+    expect(byName(fields, "field_14Month").label).toBe("生年月日 半角数字 月");
+    expect(byName(fields, "field_14Day").label).toBe("生年月日 半角数字 日");
+  });
+
+  it("「名」「メイ」だけの欄は、同じまとまりの直前の欄から共通の項目名を引き継ぐ", () => {
+    const fields = scanFields(document);
+    expect(byName(fields, "field_02").label).toBe("申込者のお名前 全角 名");
+    expect(byName(fields, "field_04").label).toBe("申込者のお名前（フリガナ） 全角カタカナ メイ");
+    // 保護者の欄であることが失われると、本人の名前を入れてしまう
+    expect(byName(fields, "field_18").label).toBe("保護者のお名前 全角 名");
+  });
+
+  it("非表示のブロック内の欄は対象外", () => {
+    expect(scanFields(document).some((f) => f.name === "field_23")).toBe(false);
+  });
+});

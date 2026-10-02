@@ -262,13 +262,13 @@ describe("resolveFills: 生年月日・性別", () => {
 });
 
 describe("resolveFills: フィクスチャで scan → ルール判定 → resolve", () => {
-  function valuesByName(fixture: string): Record<string, string> {
+  function valuesByName(fixture: string, today?: Date): Record<string, string> {
     loadFixture(fixture);
     const fields = scanFields(document);
     const assignments = fields.map(classifyByRules).filter((a): a is Assignment => a !== null);
     const byId = new Map(fields.map((f) => [f.id, f.name]));
     const out: Record<string, string> = {};
-    for (const r of resolveFills(fields, assignments, profile)) {
+    for (const r of resolveFills(fields, assignments, profile, { today })) {
       out[byId.get(r.fieldId)!] = r.status === "fill" ? r.value : `review:${r.reason}`;
     }
     return out;
@@ -302,5 +302,55 @@ describe("resolveFills: フィクスチャで scan → ルール判定 → resol
       mail_confirm: "yamada@example.com",
       tel: "090-1234-5678",
     });
+  });
+
+  it("複数 label・区切り label 型: 分割の電話・郵便番号、年月日、年齢が入り、保護者等の欄は入力しない", () => {
+    expect(valuesByName("multi-label.html", new Date(2026, 9, 2))).toEqual({
+      field_01: "山田",
+      field_02: "太郎",
+      field_03: "ヤマダ",
+      field_04: "タロウ",
+      field_05: "090",
+      field_06: "1234",
+      field_07: "5678",
+      field_08: "150",
+      field_09: "0001",
+      field_10: "東京都",
+      field_11: "渋谷区",
+      field_12: "神宮前1-2-3",
+      field_13: "ハイツ101",
+      field_14Year: "1988",
+      field_14Month: "03",
+      field_14Day: "17",
+      field_15: "38",
+    });
+  });
+});
+
+describe("resolveFills: 年齢", () => {
+  it("生年月日と今日の日付から年齢を計算する（誕生日の前日までは1つ少ない）", () => {
+    const a = field();
+    expect(resolveFills([a], [rule(a, "age")], profile, { today: new Date(2026, 2, 17) })).toEqual([fill(a, "38")]);
+    expect(resolveFills([a], [rule(a, "age")], profile, { today: new Date(2026, 2, 16) })).toEqual([fill(a, "37")]);
+  });
+
+  it("select は「38」「38歳」のどちらの表記にも合わせる", () => {
+    const a = field({ tag: "select", type: "select", options: [{ value: "x", text: "38歳" }] });
+    expect(resolveFills([a], [rule(a, "age")], profile, { today: new Date(2026, 9, 2) })).toEqual([fill(a, "x")]);
+  });
+
+  it("生年月日が未設定なら入力しない", () => {
+    const a = field();
+    expect(resolveFills([a], [rule(a, "age")], { ...profile, birthDate: "" })).toEqual([]);
+  });
+});
+
+describe("resolveFills: 年月日のテキスト欄", () => {
+  it("ラベルの末尾の「年」「月」「日」で役割を決め、maxLength 2 なら0埋めする", () => {
+    const y = field({ label: "生年月日 年", maxLength: 4 });
+    const m = field({ label: "生年月日 月", maxLength: 2 });
+    const d = field({ label: "生年月日 日", maxLength: 2 });
+    const result = resolveFills([d, m, y].sort((a, b) => a.index - b.index), [rule(y, "birthDate"), rule(m, "birthDate"), rule(d, "birthDate")], profile);
+    expect(result).toEqual([fill(y, "1988"), fill(m, "03"), fill(d, "17")]);
   });
 });

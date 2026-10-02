@@ -163,6 +163,41 @@ describe("classifyByRules: 連絡先・住所・属性", () => {
   });
 });
 
+describe("classifyByRules: 自分以外の人の欄", () => {
+  it.each([
+    "保護者のお名前 全角 姓",
+    "保護者の電話番号 半角数字",
+    "同行者情報（1人目）のお名前",
+    "緊急連絡先",
+    "【該当される方のみ】受信契約者のお名前",
+    "代理人氏名",
+    "配偶者の生年月日",
+  ])("「%s」は none で確定させる（Jev にも回さない）", (label) => {
+    expect(classifyByRules(field({ label }))).toMatchObject({ key: "none", confidence: 1, source: "rule" });
+  });
+
+  it("name 属性の guardian / emergency なども none", () => {
+    expect(keyOf({ name: "guardian_name" })).toBe("none");
+    expect(keyOf({ name: "emergency_tel" })).toBe("none");
+  });
+
+  it("お届け先・連絡先は本人とみなして通常どおり判定する", () => {
+    expect(keyOf({ label: "お届け先 電話番号" })).toBe("tel");
+    expect(keyOf({ label: "ご連絡先メールアドレス" })).toBe("email");
+  });
+});
+
+describe("classifyByRules: 年齢", () => {
+  it("「年齢」や name=age は age", () => {
+    expect(keyOf({ label: "年齢 半角数字 歳" })).toBe("age");
+    expect(keyOf({ name: "age" })).toBe("age");
+  });
+
+  it("「生年月日」は年齢と混同しない", () => {
+    expect(keyOf({ label: "生年月日 半角数字 年" })).toBe("birthDate");
+  });
+});
+
 describe("classifyByRules: フィクスチャ全欄で誤判定しない", () => {
   it.each(Object.keys(EXPECTED))("%s: ルールの結果は null か正解のどちらか", (fixture) => {
     loadFixture(fixture);

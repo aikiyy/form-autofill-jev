@@ -30,8 +30,9 @@ export const FIELD_KEY_CRITERIA: Record<FieldKey, string> = {
   building: "Building name and room number (建物名, マンション名, 部屋番号).",
   address: "Whole address after the postal code in one field (住所, ご住所).",
   birthDate: "Date of birth or one part of it: year, month or day (生年月日, 誕生日).",
+  age: "Age in years (年齢, 歳).",
   gender: "Gender / sex (性別).",
-  none: "None of the above: not personal profile information (message, company, coupon, password, agreement, etc.).",
+  none: "None of the above: not the applicant's own personal information. Includes fields about another person (guardian, companion, emergency contact, family, etc.), messages, company, coupon, password, agreement.",
 };
 
 const CRITERIA: ChoiceCriteria = { ...FIELD_KEY_CRITERIA };
@@ -64,7 +65,7 @@ export function buildJevRequest(
       {
         question: "Which personal profile item should be entered into this form field?",
         field,
-        hint: "Judge mainly from this field's label, name, placeholder, autocomplete and nearby text. Use state.fields only as surrounding context. Choose none if it is not personal profile information.",
+        hint: "Judge mainly from this field's label, name, placeholder, autocomplete and nearby text. Use state.fields only as surrounding context. Choose none if it is not the applicant's own personal information (e.g. it asks about a guardian, companion or emergency contact).",
       },
       CRITERIA,
     );

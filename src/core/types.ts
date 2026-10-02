@@ -55,6 +55,7 @@ export const FIELD_KEYS = [
   "building",
   "address",
   "birthDate",
+  "age",
   "gender",
   "none",
 ] as const;

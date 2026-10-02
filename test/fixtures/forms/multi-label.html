@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>イベント申込（1つの欄に複数の label・区切り label 型）</title></head>
+<body>
+<!-- 実在のイベント申込フォームの構造を再現（項目名のタイトル・注記・個別ラベルがすべて label[for] で同じ欄を指す） -->
+<form>
+  <div class="fieldTitle"><label for="fieldId_01">申込者のお名前</label></div>
+  <div class="fieldNote"><label for="fieldId_01">全角</label></div>
+  <div class="field">
+    <div class="setInBox"><label for="fieldId_01">姓</label> <input type="text" name="field_01" id="fieldId_01" maxlength="10"> <label for="fieldId_01"></label></div>
+    <div class="setInBox"><label for="fieldId_02">名</label> <input type="text" name="field_02" id="fieldId_02" maxlength="10"> <label for="fieldId_02"></label></div>
+  </div>
+
+  <div class="fieldTitle"><label for="fieldId_03">申込者のお名前（フリガナ）</label></div>
+  <div class="fieldNote"><label for="fieldId_03">全角カタカナ</label></div>
+  <div class="field">
+    <div class="setInBox"><label for="fieldId_03">セイ</label> <input type="text" name="field_03" id="fieldId_03" maxlength="10"></div>
+    <div class="setInBox"><label for="fieldId_04">メイ</label> <input type="text" name="field_04" id="fieldId_04" maxlength="10"></div>
+  </div>
+
+  <div class="fieldTitle"><label for="fieldId_05">電話番号（日中連絡がとれるもの）</label></div>
+  <div class="fieldNote"><label for="fieldId_05">半角数字</label></div>
+  <div class="field">
+    <div class="setInBox"><label for="fieldId_05"></label> <input type="text" name="field_05" id="fieldId_05" maxlength="5"></div>
+    <div class="setInBox"><label for="fieldId_06">- </label> <input type="text" name="field_06" id="fieldId_06" maxlength="4"></div>
+    <div class="setInBox"><label for="fieldId_07">- </label> <input type="text" name="field_07" id="fieldId_07" maxlength="4"></div>
+  </div>
+
+  <div class="fieldTitle"><label for="fieldId_08">住所</label></div>
+  <table class="fullAddress">
+    <tr><td><label for="fieldId_08">〒</label></td><td><input type="text" name="field_08" id="fieldId_08" maxlength="3">
+      <label for="fieldId_09">-</label> <input type="text" name="field_09" id="fieldId_09" maxlength="4"></td></tr>
+    <tr><td><label for="fieldId_10">都道府県</label></td><td><select name="field_10" id="fieldId_10">
+      <option value="" selected>選択してください</option>
+      <option value="" disabled>関東地方</option>
+      <option value="東京都">東京都</option>
+      <option value="神奈川県">神奈川県</option>
+    </select></td></tr>
+    <tr><td><label for="fieldId_11">市区郡町村</label></td><td><input type="text" name="field_11" id="fieldId_11" maxlength="100"></td></tr>
+    <tr><td><label for="fieldId_12">町名・番地</label></td><td><input type="text" name="field_12" id="fieldId_12" maxlength="100"></td></tr>
+    <tr><td><label for="fieldId_13">建物名・部屋番号</label></td><td><input type="text" name="field_13" id="fieldId_13" maxlength="100"></td></tr>
+  </table>
+
+  <div class="fieldTitle"><label for="field_14Year">生年月日</label></div>
+  <div class="fieldNote"><label for="field_14Year">半角数字</label></div>
+  <div class="field"><span class="inDate"><label><input type="text" name="field_14Year" id="field_14Year" maxlength="4">年</label><label><input type="text" name="field_14Month" id="field_14Month" maxlength="2">月</label><label><input type="text" name="field_14Day" id="field_14Day" maxlength="2">日</label></span></div>
+
+  <div class="fieldTitle"><label for="fieldId_15">年齢</label></div>
+  <div class="fieldNote"><label for="fieldId_15">半角数字</label></div>
+  <div class="field"><input type="text" name="field_15" id="fieldId_15" maxlength="5"></div>
+  <div class="fieldNote"><label for="fieldId_15">歳</label></div>
+
+  <div class="fieldTitle"><label for="fieldId_16">保護者の同意</label></div>
+  <div class="fieldNote"><label for="fieldId_16">お申込みには必ず保護者の方の同意が必要です。有事の際にご連絡させていただく場合があるため保護者の氏名・電話番号をご入力ください。</label></div>
+  <div class="field"><select name="field_16" id="fieldId_16"><option value="">----------</option><option value="同意する">同意する</option></select></div>
+
+  <div class="fieldTitle"><label for="fieldId_17">保護者のお名前</label></div>
+  <div class="fieldNote"><label for="fieldId_17">全角</label></div>
+  <div class="field">
+    <div class="setInBox"><label for="fieldId_17">姓</label> <input type="text" name="field_17" id="fieldId_17" maxlength="10"></div>
+    <div class="setInBox"><label for="fieldId_18">名</label> <input type="text" name="field_18" id="fieldId_18" maxlength="10"></div>
+  </div>
+
+  <div class="fieldTitle"><label for="fieldId_19">保護者の電話番号</label></div>
+  <div class="fieldNote"><label for="fieldId_19">半角数字</label></div>
+  <div class="field">
+    <div class="setInBox"><label for="fieldId_19"></label> <input type="text" name="field_19" id="fieldId_19" maxlength="5"></div>
+    <div class="setInBox"><label for="fieldId_20">- </label> <input type="text" name="field_20" id="fieldId_20" maxlength="4"></div>
+    <div class="setInBox"><label for="fieldId_21">- </label> <input type="text" name="field_21" id="fieldId_21" maxlength="4"></div>
+  </div>
+
+  <div class="fieldTitle"><label for="fieldId_22">【該当される方のみご入力ください】受信契約者のお名前 ※同一世帯で申込者と受信契約者の姓（名字）が異なる場合はご入力ください。※姓と名の間は全角スペースを空けてください。</label></div>
+  <div class="field"><input type="text" name="field_22" id="fieldId_22" maxlength="200"></div>
+
+  <!-- 非表示の同行者欄（対象外） -->
+  <div style="display:none">
+    <div class="fieldTitle"><label for="fieldId_23">同行者情報（1人目）のお名前</label></div>
+    <div class="setInBox"><label for="fieldId_23">姓</label> <input type="text" name="field_23" id="fieldId_23"></div>
+  </div>
+</form>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import {
   applyWidth,
+  calcAge,
   datePartCandidates,
   formatDate,
   formatKana,
@@ -39,23 +40,42 @@ interface Target {
   assignment: Assignment;
 }
 
+export interface ResolveOptions {
+  /** 自動入力する確信度の下限（既定: CONFIDENCE_THRESHOLD） */
+  threshold?: number;
+  /** 年齢を計算する基準日（既定: 現在日時） */
+  today?: Date | undefined;
+}
+
+/** 欄ごとの値の決定に使う共通の情報 */
+interface Context {
+  profile: Profile;
+  presentKeys: ReadonlySet<FieldKey>;
+  today: Date;
+}
+
 /**
  * 判定結果とプロフィールから、欄ごとの入力指示を作る。
  * 誤入力を防ぐため、確信度が低い・分割できない・選択肢が一致しない欄は入力せず要確認（review）にする。
  * @param fields ページ内の全欄（出現順の判定に使う）
  * @param assignments ルールと Jev の判定結果（同じ欄に両方あればルールを優先）
  * @param profile 保存済みのプロフィール
- * @param threshold 自動入力する確信度の下限
+ * @param options 確信度の下限・年齢の基準日
  * @returns 出現順の入力指示。none の欄・プロフィールが空の項目は含まない
  */
 export function resolveFills(
   fields: readonly FieldDescriptor[],
   assignments: readonly Assignment[],
   profile: Profile,
-  threshold: number = CONFIDENCE_THRESHOLD,
+  options: ResolveOptions = {},
 ): FillInstruction[] {
+  const threshold = options.threshold ?? CONFIDENCE_THRESHOLD;
   const merged = mergeAssignments(assignments);
-  const presentKeys = new Set([...merged.values()].map((a) => a.key));
+  const ctx: Context = {
+    profile,
+    presentKeys: new Set([...merged.values()].map((a) => a.key)),
+    today: options.today ?? new Date(),
+  };
   const ordered = [...fields].sort((a, b) => a.index - b.index);
   const out: FillInstruction[] = [];
 
@@ -66,7 +86,7 @@ export function resolveFills(
       out.push(...group.map((t) => review(t.field, REASON.lowConfidence)));
       continue;
     }
-    out.push(...resolveGroup(key, group.map((t) => t.field), profile, presentKeys));
+    out.push(...resolveGroup(key, group.map((t) => t.field), ctx));
   }
   return out;
 }
@@ -111,6 +131,8 @@ function hasValue(key: FieldKey, p: Profile): boolean {
       return Boolean(p.lastNameKana || p.firstNameKana);
     case "address":
       return Boolean(p.prefecture || p.city || p.street || p.building);
+    case "age":
+      return p.birthDate !== "";
     case "none":
       return false;
     default:
@@ -118,14 +140,10 @@ function hasValue(key: FieldKey, p: Profile): boolean {
   }
 }
 
-function resolveGroup(
-  key: FieldKey,
-  fields: readonly FieldDescriptor[],
-  profile: Profile,
-  presentKeys: ReadonlySet<FieldKey>,
-): FillInstruction[] {
-  if (fields.length === 1) return [resolveSingle(key, fields[0]!, profile, presentKeys)];
-  if (REPEATABLE_KEYS.has(key)) return fields.map((f) => resolveSingle(key, f, profile, presentKeys));
+function resolveGroup(key: FieldKey, fields: readonly FieldDescriptor[], ctx: Context): FillInstruction[] {
+  const { profile } = ctx;
+  if (fields.length === 1) return [resolveSingle(key, fields[0]!, ctx)];
+  if (REPEATABLE_KEYS.has(key)) return fields.map((f) => resolveSingle(key, f, ctx));
   if (!SPLIT_KEYS.has(key)) return fields.map((f) => review(f, REASON.duplicated));
 
   if (key === "tel" && fields.length === 3) return fillParts(fields, splitTel(profile.tel));
@@ -139,12 +157,8 @@ function fillParts(fields: readonly FieldDescriptor[], parts: readonly string[] 
   return fields.map((f, i) => textValue(f, parts[i]!));
 }
 
-function resolveSingle(
-  key: FieldKey,
-  field: FieldDescriptor,
-  p: Profile,
-  presentKeys: ReadonlySet<FieldKey>,
-): FillInstruction {
+function resolveSingle(key: FieldKey, field: FieldDescriptor, ctx: Context): FillInstruction {
+  const { profile: p, presentKeys } = ctx;
   switch (key) {
     case "lastName":
     case "firstName":
@@ -174,6 +188,11 @@ function resolveSingle(
       if (isChoice(field)) return review(field, REASON.cannotSplit);
       const value = formatDate(p.birthDate, field);
       return value === null ? review(field, REASON.invalidValue) : textValue(field, value);
+    }
+    case "age": {
+      const age = calcAge(p.birthDate, ctx.today);
+      if (age === null) return review(field, REASON.invalidValue);
+      return isChoice(field) ? choiceValue(field, [String(age), `${age}歳`]) : textValue(field, String(age));
     }
     case "gender":
       return isChoice(field) ? choiceValue(field, genderCandidates(p.gender)) : review(field, REASON.textGender);
@@ -229,8 +248,9 @@ const ROLE_BY_CHAR: Record<string, DatePart> = { 年: "year", 月: "month", 日:
 function roleFromText(field: FieldDescriptor): DatePart | null {
   const after = field.nearbyText.trim().charAt(0);
   if (ROLE_BY_CHAR[after]) return ROLE_BY_CHAR[after];
-  const bracket = /[（(](年|月|日)[)）]/.exec(field.label);
-  return bracket ? ROLE_BY_CHAR[bracket[1]!]! : null;
+  // 「生年月日（月）」や、分割欄の項目名の末尾に付いた「生年月日 月」
+  const unit = /[（(](年|月|日)[)）]|(?:^|\s)(年|月|日)$/.exec(field.label.trim());
+  return unit ? ROLE_BY_CHAR[(unit[1] ?? unit[2])!]! : null;
 }
 
 function roleFromOptions(field: FieldDescriptor): DatePart | null {
@@ -245,11 +265,12 @@ function roleFromOptions(field: FieldDescriptor): DatePart | null {
 }
 
 function datePartText(role: DatePart, birthDate: string, field: FieldDescriptor): string | null {
-  const [candidate, padded] = datePartCandidates(role, birthDate);
-  if (!candidate) return null;
-  if (role === "year") return candidate;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+  if (!m) return null;
+  if (role === "year") return m[1]!;
+  const padded = role === "month" ? m[2]! : m[3]!;
   const wantsPadding = /^0\d/.test(field.placeholder) || field.maxLength === 2;
-  return wantsPadding && padded ? padded : candidate;
+  return wantsPadding ? padded : String(Number(padded));
 }
 
 function isChoice(field: FieldDescriptor): boolean {
