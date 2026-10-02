@@ -4,6 +4,7 @@ import type { ClassifyResponse } from "../core/messages.ts";
 import { resolveFills } from "../core/resolve.ts";
 import { classifyByRules } from "../core/rules.ts";
 import type { Assignment, FieldDescriptor, Profile } from "../core/types.ts";
+import { LockedError } from "../storage/repository.ts";
 
 /** 外部とのやり取り（テストで差し替える） */
 export interface ClassifyDeps {
@@ -17,6 +18,7 @@ const RULES_ONLY = "項目名から確実に判断できる欄だけ入力しま
 /**
  * ページの欄を判定して入力指示を作る。ルール → Jev（残りの欄のみ）→ resolve の順。
  * APIキー未設定・Jev のエラー時はルール判定分だけで入力指示を作り、理由を notice に入れる。
+ * 暗号化オンでロック中なら入力せず、解除を促す notice を返す。
  * @throws プロフィール・APIキーの読み出し（chrome.storage）に失敗した場合
  */
 export async function classifyPage(
@@ -24,7 +26,15 @@ export async function classifyPage(
   pageTitle: string,
   deps: ClassifyDeps,
 ): Promise<ClassifyResponse> {
-  const profile = await deps.getProfile();
+  let profile: Profile;
+  try {
+    profile = await deps.getProfile();
+  } catch (error) {
+    if (error instanceof LockedError) {
+      return { instructions: [], notice: "ロック中です。拡張のアイコンを押してロックを解除してください" };
+    }
+    throw error;
+  }
   if (Object.values(profile).every((v) => v === "")) {
     return { instructions: [], notice: "プロフィールが未設定です。拡張のオプション画面から設定してください" };
   }

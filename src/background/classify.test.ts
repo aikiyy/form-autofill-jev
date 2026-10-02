@@ -2,7 +2,7 @@ import { APIConnectionError, APIError, APITimeoutError, type Questions, type Sys
 import { describe, expect, it, vi } from "vitest";
 import type { JevClient } from "../core/jev.ts";
 import type { FieldDescriptor, Profile } from "../core/types.ts";
-import { EMPTY_PROFILE } from "../storage/repository.ts";
+import { EMPTY_PROFILE, LockedError } from "../storage/repository.ts";
 import { classifyPage, describeJevError, type ClassifyDeps } from "./classify.ts";
 
 const profile: Profile = { ...EMPTY_PROFILE, lastName: "山田", email: "yamada@example.com", city: "渋谷区" };
@@ -82,6 +82,12 @@ describe("classifyPage", () => {
 
     expect(result.instructions).toEqual([{ fieldId: "afj-0", status: "fill", value: "山田" }]);
     expect(result.notice).toContain("タイムアウト");
+  });
+
+  it("ロック中なら入力せず、アイコンから解除するよう促す", async () => {
+    const result = await classifyPage(fields, "t", deps({ getProfile: async () => Promise.reject(new LockedError()) }));
+    expect(result.instructions).toEqual([]);
+    expect(result.notice).toContain("ロック中");
   });
 
   it("プロフィールが未設定なら設定を促す", async () => {
