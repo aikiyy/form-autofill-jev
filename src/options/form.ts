@@ -61,3 +61,15 @@ export function validateProfile(p: Profile): ValidationError[] {
   check("firstNameRoman", ROMAN_NAME.test(p.firstNameRoman), "ローマ字（英大文字）で入力してください");
   return errors;
 }
+
+const PASSPHRASE_MIN = 8;
+
+/**
+ * 新しいパスフレーズを検証する。
+ * @returns 問題があればエラーメッセージ、なければ null
+ */
+export function validatePassphrase(passphrase: string, confirmation: string): string | null {
+  if (passphrase.length < PASSPHRASE_MIN) return `パスフレーズは${PASSPHRASE_MIN}文字以上にしてください`;
+  if (passphrase !== confirmation) return "確認用のパスフレーズが一致しません";
+  return null;
+}

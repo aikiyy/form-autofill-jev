@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Profile } from "../core/types.ts";
 import { EMPTY_PROFILE } from "../storage/repository.ts";
-import { normalizeProfile, validateProfile } from "./form.ts";
+import { normalizeProfile, validatePassphrase, validateProfile } from "./form.ts";
 
 const valid: Profile = {
   lastName: "山田",
@@ -71,3 +71,18 @@ describe("validateProfile", () => {
     expect(validateProfile({ ...valid, tel: "09012345678" })).toEqual([]);
   });
 });
+
+describe("validatePassphrase", () => {
+  it("8文字以上で確認と一致すれば null", () => {
+    expect(validatePassphrase("correct horse", "correct horse")).toBeNull();
+  });
+
+  it("8文字未満はエラー", () => {
+    expect(validatePassphrase("short", "short")).toContain("8文字以上");
+  });
+
+  it("確認と一致しなければエラー", () => {
+    expect(validatePassphrase("correct horse", "correct house")).toContain("一致しません");
+  });
+});
+

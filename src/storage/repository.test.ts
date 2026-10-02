@@ -81,6 +81,21 @@ describe("apiKey", () => {
   });
 });
 
+describe("同時保存", () => {
+  it("プロフィールと APIキーを同時に保存しても、どちらも失われない", async () => {
+    await Promise.all([saveProfile(profile), saveApiKey("sk-new")]);
+    await expect(getProfile()).resolves.toEqual(profile);
+    await expect(getApiKey()).resolves.toBe("sk-new");
+  });
+
+  it("暗号化オンでも同時保存でどちらも失われない", async () => {
+    await enableEncryption("correct horse", ITERATIONS);
+    await Promise.all([saveProfile({ ...profile, city: "渋谷区" }), saveApiKey("sk-new")]);
+    await expect(getProfile()).resolves.toMatchObject({ city: "渋谷区" });
+    await expect(getApiKey()).resolves.toBe("sk-new");
+  });
+});
+
 describe("エラー", () => {
   it("storage の失敗はそのまま呼び出し元に伝える", async () => {
     vi.mocked(chrome.storage.local.get).mockRejectedValueOnce(new Error("quota"));

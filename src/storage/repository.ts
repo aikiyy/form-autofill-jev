@@ -67,6 +67,17 @@ interface Secrets {
   apiKey: string;
 }
 
+/**
+ * 書き込みを伴う操作を1つずつ順に実行する。
+ * 保存は「全体を読む → 一部を変える → 全体を書く」なので、同時に呼ばれると後の書き込みが先の変更を消してしまうため。
+ */
+let pending: Promise<unknown> = Promise.resolve();
+function serialized<T>(operation: () => Promise<T>): Promise<T> {
+  const run = pending.then(operation, operation);
+  pending = run.catch(() => undefined);
+  return run;
+}
+
 // ---- 公開 API（呼び出し側は暗号化の有無を意識しない） ----
 
 /**
@@ -81,9 +92,11 @@ export async function getProfile(): Promise<Profile> {
  * プロフィールを保存する（各項目の前後の空白は除く）。
  * @throws LockedError 暗号化オン・ロック中の場合
  */
-export async function saveProfile(profile: Profile): Promise<void> {
-  const secrets = await readSecrets();
-  await writeSecrets({ ...secrets, profile: trimProfile(profile) });
+export function saveProfile(profile: Profile): Promise<void> {
+  return serialized(async () => {
+    const secrets = await readSecrets();
+    await writeSecrets({ ...secrets, profile: trimProfile(profile) });
+  });
 }
 
 /**
@@ -98,9 +111,11 @@ export async function getApiKey(): Promise<string> {
  * Jev の APIキーを保存する（前後の空白は除く）。
  * @throws LockedError 暗号化オン・ロック中の場合
  */
-export async function saveApiKey(apiKey: string): Promise<void> {
-  const secrets = await readSecrets();
-  await writeSecrets({ ...secrets, apiKey: apiKey.trim() });
+export function saveApiKey(apiKey: string): Promise<void> {
+  return serialized(async () => {
+    const secrets = await readSecrets();
+    await writeSecrets({ ...secrets, apiKey: apiKey.trim() });
+  });
 }
 
 // ---- 暗号化の管理 ----
@@ -116,23 +131,27 @@ export async function getVaultState(): Promise<VaultState> {
  * @param iterations 鍵導出の反復回数（テスト用。本番は既定値）
  * @throws Error 既に暗号化オンの場合
  */
-export async function enableEncryption(passphrase: string, iterations: number = PBKDF2_ITERATIONS): Promise<void> {
-  if (await readVault()) throw new Error("既に暗号化されています");
-  const secrets = await readPlainSecrets();
-  await writeNewVault(secrets, passphrase, iterations);
-  await chrome.storage.local.remove([PROFILE_KEY, API_KEY_KEY]);
+export function enableEncryption(passphrase: string, iterations: number = PBKDF2_ITERATIONS): Promise<void> {
+  return serialized(async () => {
+    if (await readVault()) throw new Error("既に暗号化されています");
+    const secrets = await readPlainSecrets();
+    await writeNewVault(secrets, passphrase, iterations);
+    await chrome.storage.local.remove([PROFILE_KEY, API_KEY_KEY]);
+  });
 }
 
 /**
  * パスフレーズでロックを解除する（ブラウザを閉じるまで有効）。
  * @throws WrongPassphraseError パスフレーズが違う場合
  */
-export async function unlock(passphrase: string): Promise<void> {
-  const vault = await requireVault();
-  const key = await deriveKey(passphrase, vault.kdf.salt, vault.kdf.iterations);
-  await decryptJson(key, vault);
-  await chrome.storage.session.set({ [SESSION_KEY_KEY]: await exportKey(key) });
-  await chrome.storage.local.remove([PROFILE_KEY, API_KEY_KEY]);
+export function unlock(passphrase: string): Promise<void> {
+  return serialized(async () => {
+    const vault = await requireVault();
+    const key = await deriveKey(passphrase, vault.kdf.salt, vault.kdf.iterations);
+    await decryptJson(key, vault);
+    await chrome.storage.session.set({ [SESSION_KEY_KEY]: await exportKey(key) });
+    await chrome.storage.local.remove([PROFILE_KEY, API_KEY_KEY]);
+  });
 }
 
 /** すぐにロックする（解除中の鍵を捨てる） */
@@ -144,30 +163,32 @@ export async function lock(): Promise<void> {
  * パスフレーズを変更する（新しい salt で暗号化し直す）。
  * @throws WrongPassphraseError 今のパスフレーズが違う場合
  */
-export async function changePassphrase(
-  current: string,
-  next: string,
-  iterations: number = PBKDF2_ITERATIONS,
-): Promise<void> {
-  const secrets = await decryptWithPassphrase(current);
-  await writeNewVault(secrets, next, iterations);
+export function changePassphrase(current: string, next: string, iterations: number = PBKDF2_ITERATIONS): Promise<void> {
+  return serialized(async () => {
+    const secrets = await decryptWithPassphrase(current);
+    await writeNewVault(secrets, next, iterations);
+  });
 }
 
 /**
  * 暗号化をやめて平文に戻す。
  * @throws WrongPassphraseError パスフレーズが違う場合
  */
-export async function disableEncryption(passphrase: string): Promise<void> {
-  const secrets = await decryptWithPassphrase(passphrase);
-  await writePlainSecrets(secrets);
-  await chrome.storage.local.remove(VAULT_KEY);
-  await lock();
+export function disableEncryption(passphrase: string): Promise<void> {
+  return serialized(async () => {
+    const secrets = await decryptWithPassphrase(passphrase);
+    await writePlainSecrets(secrets);
+    await chrome.storage.local.remove(VAULT_KEY);
+    await chrome.storage.session.remove(SESSION_KEY_KEY);
+  });
 }
 
 /** パスフレーズを忘れたときの初期化。暗号化したデータごと消して、空の平文の状態に戻す */
-export async function resetVault(): Promise<void> {
-  await chrome.storage.local.remove([VAULT_KEY, PROFILE_KEY, API_KEY_KEY]);
-  await lock();
+export function resetVault(): Promise<void> {
+  return serialized(async () => {
+    await chrome.storage.local.remove([VAULT_KEY, PROFILE_KEY, API_KEY_KEY]);
+    await chrome.storage.session.remove(SESSION_KEY_KEY);
+  });
 }
 
 // ---- 内部 ----
