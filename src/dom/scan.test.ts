@@ -167,3 +167,33 @@ describe("scanFields: 1つの欄に複数の label・区切り label 型", () =>
     expect(scanFields(document).some((f) => f.name === "field_23")).toBe(false);
   });
 });
+
+describe("scanFields: label の for が欄と一致しない・国番号つき電話", () => {
+  beforeEach(() => loadFixture("orphan-label.html"));
+
+  it("関連付いていない行ラベルも、数段上の直前のテキストとして拾う", () => {
+    const fields = scanFields(document);
+    expect(byName(fields, "reservation[customer][last_name]").label).toBe("なまえ (ふりがな) 必須");
+    expect(byName(fields, "reservation[customer][first_name]").label).toBe("なまえ (ふりがな) 必須");
+    expect(byName(fields, "reservation[customer][kanji_last_name]").label).toBe("名前 (漢字)");
+  });
+
+  it("電話欄の前に表示された国番号（+81）を拾い、非表示の国一覧は無視する", () => {
+    const fields = scanFields(document);
+    expect(byName(fields, "reservation[customer][phone]").dialCode).toBe("+81");
+    expect(byName(fields, "reservation[customer][email]").dialCode).toBeUndefined();
+  });
+
+  it("国番号の select で選ばれている値も拾う", () => {
+    document.body.innerHTML = `
+      <div><select name="cc"><option value="1">+1</option><option value="81" selected>日本 (+81)</option></select>
+      <input type="tel" name="tel"></div>`;
+    expect(byName(scanFields(document), "tel").dialCode).toBe("+81");
+  });
+
+  it("ラベルや placeholder に +81 があれば国番号とみなす", () => {
+    document.body.innerHTML = `<label>電話番号（+81）<input type="tel" name="tel"></label>`;
+    expect(byName(scanFields(document), "tel").dialCode).toBe("+81");
+  });
+});
+

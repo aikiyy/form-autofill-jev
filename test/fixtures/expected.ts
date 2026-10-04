@@ -75,4 +75,12 @@ export const EXPECTED: Record<string, Record<string, FieldKey>> = {
     card_m: "none",
     card_y: "none",
   },
+  "orphan-label.html": {
+    "reservation[customer][last_name]": "lastNameKana",
+    "reservation[customer][first_name]": "firstNameKana",
+    "reservation[customer][kanji_last_name]": "lastName",
+    "reservation[customer][kanji_first_name]": "firstName",
+    "reservation[customer][phone]": "tel",
+    "reservation[customer][email]": "email",
+  },
 };

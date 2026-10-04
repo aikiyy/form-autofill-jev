@@ -102,6 +102,8 @@ export interface FieldDescriptor {
   nearbyText: string;
   options?: FieldOption[];
   maxLength?: number;
+  /** 欄の近くに表示された電話の国番号（例: "+81"） */
+  dialCode?: string;
   /** ページ内の出現順（0始まり）。分割欄の順序決定に使う */
   index: number;
 }

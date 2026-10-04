@@ -7,6 +7,7 @@ import {
   formatPostal,
   formatRoman,
   formatTel,
+  withoutTrunkPrefix,
   genderCandidates,
   matchOption,
   prefectureCandidates,
@@ -156,7 +157,10 @@ function resolveGroup(key: FieldKey, fields: readonly FieldDescriptor[], ctx: Co
   if (REPEATABLE_KEYS.has(key)) return fields.map((f) => resolveSingle(key, f, ctx));
   if (!SPLIT_KEYS.has(key)) return fields.map((f) => review(f, REASON.duplicated));
 
-  if (key === "tel" && fields.length === 3) return fillParts(fields, splitTel(profile.tel));
+  if (key === "tel" && fields.length === 3) {
+    const parts = splitTel(profile.tel);
+    return fillParts(fields, parts && withoutTrunkPrefix(parts, fields[0]!));
+  }
   if (key === "postalCode" && fields.length === 2) return fillParts(fields, splitPostal(profile.postalCode));
   if (isDateKey(key) && fields.length <= 3) return resolveDateParts(fields, profile[key]);
   return fields.map((f) => review(f, REASON.cannotSplit));

@@ -237,6 +237,21 @@ describe("classifyByRules: ローマ字氏名", () => {
   });
 });
 
+describe("classifyByRules: 行ラベルと name の組み合わせ", () => {
+  it("placeholder の「ふりがな」もフリガナの手がかりにする", () => {
+    expect(keyOf({ name: "reservation[customer][last_name]", placeholder: "せい (ふりがな)" })).toBe("lastNameKana");
+  });
+
+  it("「なまえ」もお名前として扱う", () => {
+    expect(keyOf({ label: "おなまえ" })).toBe("fullName");
+  });
+
+  it("姓名2欄に共通の行ラベル（お名前・名前）より、name の姓・名を優先する", () => {
+    expect(keyOf({ label: "名前 (漢字)", name: "kanji_last_name", placeholder: "氏" })).toBe("lastName");
+    expect(keyOf({ label: "なまえ (ふりがな) 必須", name: "first_name" })).toBe("firstNameKana");
+  });
+});
+
 describe("classifyByRules: フィクスチャ全欄で誤判定しない", () => {
   it.each(Object.keys(EXPECTED))("%s: ルールの結果は null か正解のどちらか", (fixture) => {
     loadFixture(fixture);

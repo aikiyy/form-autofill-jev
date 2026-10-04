@@ -90,10 +90,25 @@ export function splitTel(tel: string): [string, string, string] | null {
   return mobile ? [mobile[1]!, mobile[2]!, mobile[3]!] : null;
 }
 
-/** 電話番号を1欄用に整形する（ハイフンの有無は欄に合わせる） */
+/** 電話番号を1欄用に整形する（ハイフンの有無は欄に合わせ、国番号 +81 が付く欄では先頭の 0 を省く） */
 export function formatTel(tel: string, field: FieldDescriptor): string {
-  if (!wantsHyphen(field)) return digitsOnly(tel);
-  return splitTel(tel)?.join("-") ?? toHalfWidth(tel).replace(HYPHENS, "-");
+  if (!wantsHyphen(field)) return dropTrunkPrefix(digitsOnly(tel), field);
+  const parts = splitTel(tel);
+  if (parts) return withoutTrunkPrefix(parts, field).join("-");
+  return dropTrunkPrefix(toHalfWidth(tel).replace(HYPHENS, "-"), field);
+}
+
+/**
+ * 国番号 +81 が付く欄では、国内番号の先頭の 0（国内プレフィックス）を省く（090-1234-5678 → 90-1234-5678）。
+ * 分割欄では先頭の欄だけに適用する。
+ */
+export function withoutTrunkPrefix(parts: readonly string[], field: FieldDescriptor): string[] {
+  const [first = "", ...rest] = parts;
+  return [dropTrunkPrefix(first, field), ...rest];
+}
+
+function dropTrunkPrefix(value: string, field: FieldDescriptor): string {
+  return field.dialCode === "+81" ? value.replace(/^0/, "") : value;
 }
 
 /** 郵便番号を 3桁・4桁に分ける。7桁でなければ null */

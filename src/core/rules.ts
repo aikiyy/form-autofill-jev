@@ -110,7 +110,7 @@ const EXPIRY_TEXT = /有効期限|有効期間|満了|expir|valid/i;
 const LAST_NAME_TEXT = /姓|名字|苗字|セイ|せい|last\s*name|family\s*name|surname/i;
 /** 「名」は単独（先頭・括弧や区切りの直後）のときだけ。「氏名」「お名前」「名字」「建物名」等は除く */
 const FIRST_NAME_TEXT = /(^|[\s（(・/／「【])名(?![前字])|メイ|めい|first\s*name|given\s*name/i;
-const FULL_NAME_TEXT = /氏名|お名前|名前|full\s*name|^\s*name\s*$/i;
+const FULL_NAME_TEXT = /氏名|お名前|名前|なまえ|full\s*name|^\s*name\s*$/i;
 /** ラベルがこれだけなら「氏名のフリガナ（1欄）」 */
 const FULL_NAME_KANA_LABEL = /^(フリガナ|ふりがな|カナ|カナ氏名|フリガナ氏名|氏名カナ|氏名フリガナ)$/;
 
@@ -151,8 +151,10 @@ function byText(field: FieldDescriptor): FieldKey | null {
 
   // 同じ手がかりの中で複数の項目に当てはまる、または手がかり同士が食い違う場合は断定しない
   if (fromText.size > 1 || fromTokens.size > 1) return null;
-  const [a] = fromText;
+  let [a] = fromText;
   const [b] = fromTokens;
+  // 「お名前」「名前 (漢字)」は姓・名の2欄に共通の行ラベルであることが多いので、name 属性の姓・名を優先する
+  if (a === "fullName" && (b === "lastName" || b === "firstName")) a = b;
   if (a && b && a !== b) return null;
   const key = a ?? b;
   return key ? withNameVariant(key, field) : null;
@@ -181,7 +183,7 @@ function nameFromTokens(tokens: ReadonlySet<string>): FieldKey | null {
 
 /** 氏名の欄がフリガナ用かどうか */
 function isKana(field: FieldDescriptor): boolean {
-  if (KANA_TEXT.test(`${field.label} ${field.ariaLabel} ${field.nearbyText}`)) return true;
+  if (KANA_TEXT.test(`${field.label} ${field.ariaLabel} ${field.nearbyText} ${field.placeholder}`)) return true;
   if (field.placeholder && KANA_ONLY.test(field.placeholder)) return true;
   return [...identTokens(field)].some((t) => KANA_TOKENS.has(t));
 }

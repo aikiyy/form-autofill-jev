@@ -421,3 +421,42 @@ describe("resolveFills: パスポートのフィクスチャ（任意の有効�
   });
 });
 
+describe("resolveFills: 国番号 +81 つきの電話番号", () => {
+  it("+81 が付く欄では先頭の 0 を省く（ハイフンの有無は従来どおり）", () => {
+    const a = field({ dialCode: "+81" });
+    const b = field({ dialCode: "+81", placeholder: "90-1234-5678" });
+    expect(resolveFills([a], [rule(a, "tel")], profile)).toEqual([fill(a, "9012345678")]);
+    expect(resolveFills([b], [rule(b, "tel")], profile)).toEqual([fill(b, "90-1234-5678")]);
+  });
+
+  it("3分割でも先頭の欄の 0 を省く", () => {
+    const [x, y, z] = [field({ dialCode: "+81" }), field(), field()];
+    const result = resolveFills([x, y, z], [rule(x, "tel"), rule(y, "tel"), rule(z, "tel")], profile);
+    expect(result).toEqual([fill(x, "90"), fill(y, "1234"), fill(z, "5678")]);
+  });
+
+  it("+81 以外の国番号では変えない", () => {
+    const a = field({ dialCode: "+1" });
+    expect(resolveFills([a], [rule(a, "tel")], profile)).toEqual([fill(a, "09012345678")]);
+  });
+
+  it("予約フォームのフィクスチャ: ふりがな・漢字・国番号つき電話", () => {
+    loadFixture("orphan-label.html");
+    const fields = scanFields(document);
+    const assignments = fields.map(classifyByRules).filter((a): a is Assignment => a !== null);
+    const byId = new Map(fields.map((f) => [f.id, f.name]));
+    const out: Record<string, string> = {};
+    for (const r of resolveFills(fields, assignments, profile)) {
+      out[byId.get(r.fieldId)!] = r.status === "fill" ? r.value : `review:${r.reason}`;
+    }
+    expect(out).toEqual({
+      "reservation[customer][last_name]": "やまだ",
+      "reservation[customer][first_name]": "たろう",
+      "reservation[customer][kanji_last_name]": "山田",
+      "reservation[customer][kanji_first_name]": "太郎",
+      "reservation[customer][phone]": "9012345678",
+      "reservation[customer][email]": "yamada@example.com",
+    });
+  });
+});
+

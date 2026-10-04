@@ -130,6 +130,7 @@ function compactField(field: FieldDescriptor): { [key: string]: JsonValue } {
     ["ariaLabel", field.ariaLabel],
     ["nearbyText", field.nearbyText],
     ["maxLength", field.maxLength],
+    ["dialCode", field.dialCode],
   ];
   for (const [key, value] of entries) {
     if (value !== undefined && value !== "") out[key] = value;

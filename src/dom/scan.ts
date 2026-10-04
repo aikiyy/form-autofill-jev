@@ -41,6 +41,10 @@ interface OwnLabel {
 }
 const NEARBY_TEXT_MAX = 30;
 const PRECEDING_TEXT_MAX = 40;
+/** 直前のテキストを探してさかのぼる親要素の段数（label の for が一致しない行ラベルは数段上にある） */
+const PRECEDING_TEXT_DEPTH = 4;
+const DIAL_CODE_IN_TEXT = /\+\s?(\d{1,4})/;
+const DIAL_CODE_ONLY = /^\+\s?(\d{1,4})$/;
 
 /**
  * ページ内の入力欄を収集し、Jev・ルール判定に渡すメタ情報を作る。
@@ -83,6 +87,10 @@ export function scanFields(root: Document): FieldDescriptor[] {
     const label = resolved.label || precedingText(el);
     const descriptor: FieldDescriptor = { ...baseDescriptor(el, id, index), label };
     if (el instanceof HTMLSelectElement) descriptor.options = selectOptions(el);
+    if (el instanceof HTMLInputElement) {
+      const dialCode = detectDialCode(el, label);
+      if (dialCode) descriptor.dialCode = dialCode;
+    }
     fields.push(descriptor);
     prev = { el, label, context: resolved.context };
   }
@@ -218,12 +226,12 @@ function fieldsetLegend(el: Element): string {
 }
 
 /**
- * 直前にあるテキストを集める（入力欄は飛ばす）。
- * 見つからなければ親要素の直前へ1段だけさかのぼる。
+ * 直前にあるテキストを集める（入力欄・非表示の要素は飛ばす）。
+ * 見つからなければ親要素の直前へさかのぼる（最大 PRECEDING_TEXT_DEPTH 段）。
  */
 function precedingText(el: Element): string {
   let node: Element | null = el;
-  for (let depth = 0; node && depth < 2; depth++, node = node.parentElement) {
+  for (let depth = 0; node && depth < PRECEDING_TEXT_DEPTH; depth++, node = node.parentElement) {
     const parts: string[] = [];
     for (let sib = node.previousSibling; sib; sib = sib.previousSibling) {
       if (isControlNode(sib)) continue;
@@ -250,8 +258,41 @@ function isControlNode(node: Node): boolean {
   return node instanceof Element && (node.matches(CONTROL_SELECTOR) || node.querySelector(CONTROL_SELECTOR) !== null);
 }
 
+/** 表示されているテキストだけを集める（入力欄・非表示の要素の中身は除く） */
 function nodeText(node: Node): string {
-  return node instanceof Element ? textWithoutControls(node) : (node.textContent ?? "");
+  if (!(node instanceof Element)) return node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "") : "";
+  if (node.matches(CONTROL_SELECTOR) || isSelfHidden(node)) return "";
+  return Array.from(node.childNodes, nodeText).join(" ");
+}
+
+function isSelfHidden(el: Element): boolean {
+  if (el.hasAttribute("hidden")) return true;
+  const style = el.ownerDocument.defaultView?.getComputedStyle(el);
+  return style?.display === "none" || style?.visibility === "hidden";
+}
+
+/**
+ * 電話の国番号を探す。ラベル・placeholder の「+81」、欄の近く（親・祖父母要素の中）に表示された
+ * 「+81」だけの要素（intl-tel-input 等が描画する）、国番号の select で選ばれている値の順に見る。
+ */
+function detectDialCode(el: HTMLInputElement, label: string): string | undefined {
+  const own = DIAL_CODE_IN_TEXT.exec(`${label} ${el.placeholder} ${el.getAttribute("aria-label") ?? ""}`);
+  if (own) return `+${own[1]}`;
+  for (const scope of [el.parentElement, el.parentElement?.parentElement]) {
+    if (!scope) continue;
+    for (const node of scope.querySelectorAll("*")) {
+      // select の選択肢は下で「選ばれている値」として見るので、ここでは除く
+      if (node.children.length > 0 || node.matches(CONTROL_SELECTOR) || node.closest("select")) continue;
+      const m = DIAL_CODE_ONLY.exec((node.textContent ?? "").trim());
+      if (m && isVisible(node)) return `+${m[1]}`;
+    }
+    for (const select of scope.querySelectorAll("select")) {
+      const option = select.selectedOptions[0];
+      const m = option && DIAL_CODE_IN_TEXT.exec(option.text);
+      if (m) return `+${m[1]}`;
+    }
+  }
+  return undefined;
 }
 
 /** select の option などの文字列を含めずに要素のテキストを得る */
