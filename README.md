@@ -40,7 +40,7 @@ Chrome ウェブストアには公開していません。ソースからビル�
 - TypeSafe の APIキー（任意）。[ダッシュボード](https://console.typesafe.ai/keys)で発行します。なくても、ラベルなどから確実に判断できる欄は入力します
 
 ```sh
-git clone <このリポジトリのURL>
+git clone https://github.com/aikiyy/form-autofill-jev.git
 cd form-autofill-jev
 npm install
 npm run build
