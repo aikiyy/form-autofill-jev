@@ -129,3 +129,7 @@ TYPESAFE_API_KEY=発行したキー
 ## 技術スタック
 
 TypeScript（strict）/ Vite + [CRXJS](https://crxjs.dev/vite-plugin) / Manifest V3 / Vitest / Tailwind CSS v4 / [@typesafe-ai/sdk](https://docs.typesafe.ai/sdk/javascript)
+
+## ライセンス
+
+[MIT](LICENSE)
